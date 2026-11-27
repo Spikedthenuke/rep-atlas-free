@@ -6,7 +6,7 @@ function reminderUrl(value){ const url=new URL(String(value||"").trim()); if(url
 function reminderStatus(message){ const node=document.querySelector("#reminder-status"); if(node) node.textContent=message; }
 function reminderOptions(){ if(!data.plans.length)return "<option value=''>Create a plan first</option>"; const selected=data.plans.some(p=>p.id===reminderSettings.planId)?reminderSettings.planId:data.plans[0].id; return data.plans.map(p=>"<option value=\""+escapeHTML(p.id)+"\" "+(p.id===selected?"selected":"")+">"+escapeHTML(p.goal)+" · "+escapeHTML(p.split)+"</option>").join(""); }
 function addReminderPanel(){
-  const host=document.querySelector("#modal .modal-content");
+  const host=document.querySelector("#modal-content");
   if(!host||host.querySelector(".reminder-setting"))return;
   const box=document.createElement("section"); box.className="reminder-setting";
   box.innerHTML="<style>.reminder-setting{padding:14px;margin:0 0 14px;background:var(--paper);border:1px solid var(--line);border-radius:15px}.reminder-setting p{font-size:11px;line-height:1.5;color:var(--muted)}.reminder-setting label{display:block;font-size:12px;font-weight:700;margin:12px 0 5px}.reminder-setting input,.reminder-setting select{width:100%}.reminder-setting button{margin:4px 0}.reminder-actions{display:grid;gap:7px}</style>"+
