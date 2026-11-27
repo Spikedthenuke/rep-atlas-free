@@ -338,7 +338,7 @@ document.addEventListener("submit", event => {
   if(form.id==="plan-form"){
     const goal=String(values.get("goal")).trim();const target=values.get("target")==="auto"?targetFor(goal):values.get("target");const split=values.get("split");
     const weekdays=values.getAll("weekdays");if(!weekdays.length){toast("Choose at least one training day.");return;}
-    const includeCardio=values.has("includeCardio");const gear=values.getAll("gear");if(!gear.length&&split!=="Cardio"&&!includeCardio&&target!=="Improve endurance"){toast("Select equipment or add cardio to your plan.");return;}
+    const includeCardio=values.has("includeCardio");const gear=values.getAll("gear");if(!gear.length&&split!=="Cardio"){toast("Choose at least one option for the strength exercises.");return;}
     if(split==="Cardio"||includeCardio||target==="Improve endurance")gear.push("bodyweight","cardio");
     const focus=focusFor(goal);const plan=makePlan({goal,target,split,count:weekdays.length,variation:Number(values.get("variation")),gear:[...new Set(gear)],focus,weekdays,includeCardio});
     previewPlan(plan);
