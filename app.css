@@ -1,7 +1,7 @@
 :root {
   font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  color: #1f2023;
-  background: #f7f5f3;
+  color: var(--ink);
+  background: var(--page);
   font-synthesis: none;
   font-weight: 400;
   --red: #d93442;
@@ -10,6 +10,7 @@
   --line: #e8e4e1;
   --paper: #fff;
   --soft: #f1eeeb;
+  --page: #f7f5f3;
   --green: #26805b
 }
 
@@ -21,7 +22,7 @@ body {
   margin: 0;
   min-height: 100vh;
   padding-bottom: calc(78px + env(safe-area-inset-bottom));
-  background: #f7f5f3
+  background: var(--page)
 }
 
 .topbar {
@@ -33,7 +34,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 5;
-  background: #f7f5f3eF;
+  background: color-mix(in srgb,var(--page) 94%,transparent);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid #ebe7e3
 }
@@ -646,3 +647,49 @@ main {
     font-size: 34px
   }
 }
+
+.availability-card { padding: 14px }
+.calendar-heading { align-items: flex-start; gap: 8px }
+.calendar-heading .subtle { margin: 4px 0 0 }
+.calendar-nav { display: flex; align-items: center; gap: 7px; white-space: nowrap }
+.calendar-nav strong { min-width: 112px; text-align: center; font-size: 13px }
+.calendar-grid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; margin-top: 8px }
+.calendar-weekdays { color: var(--muted); text-align: center; font-size: 10px; font-weight: 700; margin-top: 14px }
+.calendar-day { position: relative; min-width: 0; min-height: 43px; padding: 6px 1px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer }
+.calendar-day.selected { border-color: var(--red); background: var(--red); color: #fff; font-weight: 750 }
+.calendar-day small { display: block; font-size: 8px; font-weight: 650 }
+.calendar-day:disabled { border-color: transparent; background: transparent; color: var(--muted); opacity: .45; cursor: default }
+.calendar-blank { min-height: 43px }
+.calendar-footer { margin-top: 10px; align-items: center }
+.calendar-help { margin: 8px 0 0; font-size: 11px }
+.schedule-preview { display: grid; gap: 3px; border: 1px solid var(--line); border-radius: 11px; background: var(--soft); padding: 10px 12px; color: var(--ink); font-size: 12px }
+.schedule-preview span { color: var(--muted); line-height: 1.55 }
+.appearance-setting { padding: 12px; margin-bottom: 14px; background: var(--soft); border: 1px solid var(--line); border-radius: 14px }
+.theme-control { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; font-weight: 700 }
+.theme-control input { width: 48px; accent-color: var(--red) }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f1eff2;
+  --muted: #aaa7b0;
+  --line: #39373d;
+  --paper: #222126;
+  --soft: #2d2b31;
+  --page: #171619;
+}
+
+:root[data-theme="dark"] .topbar { border-color: var(--line) }
+:root[data-theme="dark"] .field label,:root[data-theme="dark"] .field-label { color: #c3c0c8 }
+:root[data-theme="dark"] .field input,:root[data-theme="dark"] .field select,:root[data-theme="dark"] .field textarea,:root[data-theme="dark"] .searchbox,:root[data-theme="dark"] .modal input,:root[data-theme="dark"] .modal select { border-color: var(--line); background: var(--paper); color: var(--ink) }
+:root[data-theme="dark"] .check-option,:root[data-theme="dark"] .chip,:root[data-theme="dark"] .stepper button { border-color: var(--line); background: var(--paper); color: var(--ink) }
+:root[data-theme="dark"] .tabbar { background: #201f22f2 }
+:root[data-theme="dark"] .figure-card { background: #201f22 }
+:root[data-theme="dark"] .body-base { fill: #55525a; stroke: #807c84 }
+:root[data-theme="dark"] .muscle { stroke: #201f22 }
+:root[data-theme="dark"] .day-exercise { border-color: var(--line) }
+:root[data-theme="dark"] .badge { background: #39363d; color: #e3dfe6 }
+:root[data-theme="dark"] .progress { background: #39363d }
+:root[data-theme="dark"] .modal { background: #201f23 }
+:root[data-theme="dark"] .modal-close { background: #39363d; color: var(--ink) }
+:root[data-theme="dark"] .button.danger { background: #442629; color: #ffadb2 }
+:root[data-theme="dark"] .plan-card:hover { border-color: #87434a }
