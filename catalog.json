@@ -1,0 +1,2064 @@
+[
+  {
+    "id": "push-up",
+    "name": "Push-up",
+    "pattern": "push",
+    "gear": "bodyweight",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "incline-push-up",
+    "name": "Incline Push-up",
+    "pattern": "push",
+    "gear": "bodyweight",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "decline-push-up",
+    "name": "Decline Push-up",
+    "pattern": "push",
+    "gear": "bodyweight",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "diamond-push-up",
+    "name": "Diamond Push-up",
+    "pattern": "push",
+    "gear": "bodyweight",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "archer-push-up",
+    "name": "Archer Push-up",
+    "pattern": "push",
+    "gear": "bodyweight",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "pike-push-up",
+    "name": "Pike Push-up",
+    "pattern": "push",
+    "gear": "bodyweight",
+    "muscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "wall-handstand-push-up",
+    "name": "Wall Handstand Push-up",
+    "pattern": "push",
+    "gear": "bodyweight",
+    "muscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "bench-dip",
+    "name": "Bench Dip",
+    "pattern": "push",
+    "gear": "bodyweight",
+    "muscles": [
+      "triceps",
+      "chest"
+    ]
+  },
+  {
+    "id": "dumbbell-bench-press",
+    "name": "Dumbbell Bench Press",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "incline-dumbbell-press",
+    "name": "Incline Dumbbell Press",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "dumbbell-floor-press",
+    "name": "Dumbbell Floor Press",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "neutral-grip-dumbbell-press",
+    "name": "Neutral-Grip Dumbbell Press",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "dumbbell-fly",
+    "name": "Dumbbell Fly",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "chest"
+    ]
+  },
+  {
+    "id": "incline-dumbbell-fly",
+    "name": "Incline Dumbbell Fly",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "chest"
+    ]
+  },
+  {
+    "id": "dumbbell-shoulder-press",
+    "name": "Dumbbell Shoulder Press",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "arnold-press",
+    "name": "Arnold Press",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "dumbbell-lateral-raise",
+    "name": "Dumbbell Lateral Raise",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "shoulders"
+    ]
+  },
+  {
+    "id": "dumbbell-front-raise",
+    "name": "Dumbbell Front Raise",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "shoulders"
+    ]
+  },
+  {
+    "id": "overhead-dumbbell-extension",
+    "name": "Overhead Dumbbell Extension",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "triceps"
+    ]
+  },
+  {
+    "id": "dumbbell-kickback",
+    "name": "Dumbbell Kickback",
+    "pattern": "push",
+    "gear": "dumbbells",
+    "muscles": [
+      "triceps"
+    ]
+  },
+  {
+    "id": "barbell-bench-press",
+    "name": "Barbell Bench Press",
+    "pattern": "push",
+    "gear": "barbell",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "incline-barbell-bench-press",
+    "name": "Incline Barbell Bench Press",
+    "pattern": "push",
+    "gear": "barbell",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "close-grip-bench-press",
+    "name": "Close-Grip Bench Press",
+    "pattern": "push",
+    "gear": "barbell",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "barbell-overhead-press",
+    "name": "Barbell Overhead Press",
+    "pattern": "push",
+    "gear": "barbell",
+    "muscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "push-press",
+    "name": "Push Press",
+    "pattern": "push",
+    "gear": "barbell",
+    "muscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "cable-crossover",
+    "name": "Cable Crossover",
+    "pattern": "push",
+    "gear": "cable",
+    "muscles": [
+      "chest"
+    ]
+  },
+  {
+    "id": "low-to-high-cable-fly",
+    "name": "Low-to-High Cable Fly",
+    "pattern": "push",
+    "gear": "cable",
+    "muscles": [
+      "chest"
+    ]
+  },
+  {
+    "id": "high-to-low-cable-fly",
+    "name": "High-to-Low Cable Fly",
+    "pattern": "push",
+    "gear": "cable",
+    "muscles": [
+      "chest"
+    ]
+  },
+  {
+    "id": "rope-pushdown",
+    "name": "Rope Pushdown",
+    "pattern": "push",
+    "gear": "cable",
+    "muscles": [
+      "triceps"
+    ]
+  },
+  {
+    "id": "straight-bar-pushdown",
+    "name": "Straight-Bar Pushdown",
+    "pattern": "push",
+    "gear": "cable",
+    "muscles": [
+      "triceps"
+    ]
+  },
+  {
+    "id": "overhead-cable-extension",
+    "name": "Overhead Cable Extension",
+    "pattern": "push",
+    "gear": "cable",
+    "muscles": [
+      "triceps"
+    ]
+  },
+  {
+    "id": "machine-chest-press",
+    "name": "Machine Chest Press",
+    "pattern": "push",
+    "gear": "machine",
+    "muscles": [
+      "chest",
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "machine-incline-press",
+    "name": "Machine Incline Press",
+    "pattern": "push",
+    "gear": "machine",
+    "muscles": [
+      "chest",
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "pec-deck",
+    "name": "Pec Deck",
+    "pattern": "push",
+    "gear": "machine",
+    "muscles": [
+      "chest"
+    ]
+  },
+  {
+    "id": "band-chest-press",
+    "name": "Band Chest Press",
+    "pattern": "push",
+    "gear": "band",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "band-resisted-push-up",
+    "name": "Band-Resisted Push-up",
+    "pattern": "push",
+    "gear": "band",
+    "muscles": [
+      "chest",
+      "triceps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "band-overhead-press",
+    "name": "Band Overhead Press",
+    "pattern": "push",
+    "gear": "band",
+    "muscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "kettlebell-strict-press",
+    "name": "Kettlebell Strict Press",
+    "pattern": "push",
+    "gear": "kettlebell",
+    "muscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "kettlebell-floor-press",
+    "name": "Kettlebell Floor Press",
+    "pattern": "push",
+    "gear": "kettlebell",
+    "muscles": [
+      "shoulders",
+      "triceps"
+    ]
+  },
+  {
+    "id": "prone-y-raise",
+    "name": "Prone Y Raise",
+    "pattern": "pull",
+    "gear": "bodyweight",
+    "muscles": [
+      "traps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "prone-t-raise",
+    "name": "Prone T Raise",
+    "pattern": "pull",
+    "gear": "bodyweight",
+    "muscles": [
+      "traps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "reverse-snow-angel",
+    "name": "Reverse Snow Angel",
+    "pattern": "pull",
+    "gear": "bodyweight",
+    "muscles": [
+      "traps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "prone-w-raise",
+    "name": "Prone W Raise",
+    "pattern": "pull",
+    "gear": "bodyweight",
+    "muscles": [
+      "traps",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "pull-up",
+    "name": "Pull-up",
+    "pattern": "pull",
+    "gear": "pullupBar",
+    "muscles": [
+      "lats",
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "chin-up",
+    "name": "Chin-up",
+    "pattern": "pull",
+    "gear": "pullupBar",
+    "muscles": [
+      "lats",
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "neutral-grip-pull-up",
+    "name": "Neutral-Grip Pull-up",
+    "pattern": "pull",
+    "gear": "pullupBar",
+    "muscles": [
+      "lats",
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "scapular-pull-up",
+    "name": "Scapular Pull-up",
+    "pattern": "pull",
+    "gear": "pullupBar",
+    "muscles": [
+      "lats",
+      "traps"
+    ]
+  },
+  {
+    "id": "one-arm-dumbbell-row",
+    "name": "One-Arm Dumbbell Row",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "lats",
+      "biceps",
+      "traps"
+    ]
+  },
+  {
+    "id": "chest-supported-dumbbell-row",
+    "name": "Chest-Supported Dumbbell Row",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "lats",
+      "biceps",
+      "traps"
+    ]
+  },
+  {
+    "id": "bent-over-dumbbell-row",
+    "name": "Bent-Over Dumbbell Row",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "lats",
+      "biceps",
+      "traps"
+    ]
+  },
+  {
+    "id": "dumbbell-curl",
+    "name": "Dumbbell Curl",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "hammer-curl",
+    "name": "Hammer Curl",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "incline-dumbbell-curl",
+    "name": "Incline Dumbbell Curl",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "concentration-curl",
+    "name": "Concentration Curl",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "reverse-curl",
+    "name": "Reverse Curl",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "dumbbell-reverse-fly",
+    "name": "Dumbbell Reverse Fly",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "shoulders",
+      "traps"
+    ]
+  },
+  {
+    "id": "rear-delt-row",
+    "name": "Rear-Delt Row",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "shoulders",
+      "traps"
+    ]
+  },
+  {
+    "id": "dumbbell-shrug",
+    "name": "Dumbbell Shrug",
+    "pattern": "pull",
+    "gear": "dumbbells",
+    "muscles": [
+      "traps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "barbell-row",
+    "name": "Barbell Row",
+    "pattern": "pull",
+    "gear": "barbell",
+    "muscles": [
+      "lats",
+      "biceps",
+      "traps",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "pendlay-row",
+    "name": "Pendlay Row",
+    "pattern": "pull",
+    "gear": "barbell",
+    "muscles": [
+      "lats",
+      "biceps",
+      "traps",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "underhand-barbell-row",
+    "name": "Underhand Barbell Row",
+    "pattern": "pull",
+    "gear": "barbell",
+    "muscles": [
+      "lats",
+      "biceps",
+      "traps",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "barbell-curl",
+    "name": "Barbell Curl",
+    "pattern": "pull",
+    "gear": "barbell",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ]
+  },
+  {
+    "id": "lat-pulldown",
+    "name": "Lat Pulldown",
+    "pattern": "pull",
+    "gear": "cable",
+    "muscles": [
+      "lats",
+      "biceps"
+    ]
+  },
+  {
+    "id": "close-grip-pulldown",
+    "name": "Close-Grip Pulldown",
+    "pattern": "pull",
+    "gear": "cable",
+    "muscles": [
+      "lats",
+      "biceps"
+    ]
+  },
+  {
+    "id": "single-arm-pulldown",
+    "name": "Single-Arm Pulldown",
+    "pattern": "pull",
+    "gear": "cable",
+    "muscles": [
+      "lats",
+      "biceps"
+    ]
+  },
+  {
+    "id": "seated-cable-row",
+    "name": "Seated Cable Row",
+    "pattern": "pull",
+    "gear": "cable",
+    "muscles": [
+      "lats",
+      "traps",
+      "biceps"
+    ]
+  },
+  {
+    "id": "wide-grip-cable-row",
+    "name": "Wide-Grip Cable Row",
+    "pattern": "pull",
+    "gear": "cable",
+    "muscles": [
+      "lats",
+      "traps",
+      "biceps"
+    ]
+  },
+  {
+    "id": "cable-face-pull",
+    "name": "Cable Face Pull",
+    "pattern": "pull",
+    "gear": "cable",
+    "muscles": [
+      "shoulders",
+      "traps"
+    ]
+  },
+  {
+    "id": "cable-rear-delt-fly",
+    "name": "Cable Rear-Delt Fly",
+    "pattern": "pull",
+    "gear": "cable",
+    "muscles": [
+      "shoulders",
+      "traps"
+    ]
+  },
+  {
+    "id": "machine-row",
+    "name": "Machine Row",
+    "pattern": "pull",
+    "gear": "machine",
+    "muscles": [
+      "lats",
+      "traps",
+      "biceps"
+    ]
+  },
+  {
+    "id": "chest-supported-machine-row",
+    "name": "Chest-Supported Machine Row",
+    "pattern": "pull",
+    "gear": "machine",
+    "muscles": [
+      "lats",
+      "traps",
+      "biceps"
+    ]
+  },
+  {
+    "id": "assisted-pull-up",
+    "name": "Assisted Pull-up",
+    "pattern": "pull",
+    "gear": "machine",
+    "muscles": [
+      "lats",
+      "traps",
+      "biceps"
+    ]
+  },
+  {
+    "id": "band-row",
+    "name": "Band Row",
+    "pattern": "pull",
+    "gear": "band",
+    "muscles": [
+      "lats",
+      "traps",
+      "biceps"
+    ]
+  },
+  {
+    "id": "band-lat-pulldown",
+    "name": "Band Lat Pulldown",
+    "pattern": "pull",
+    "gear": "band",
+    "muscles": [
+      "lats",
+      "traps",
+      "biceps"
+    ]
+  },
+  {
+    "id": "band-pull-apart",
+    "name": "Band Pull-Apart",
+    "pattern": "pull",
+    "gear": "band",
+    "muscles": [
+      "shoulders",
+      "traps"
+    ]
+  },
+  {
+    "id": "band-face-pull",
+    "name": "Band Face Pull",
+    "pattern": "pull",
+    "gear": "band",
+    "muscles": [
+      "shoulders",
+      "traps"
+    ]
+  },
+  {
+    "id": "kettlebell-row",
+    "name": "Kettlebell Row",
+    "pattern": "pull",
+    "gear": "kettlebell",
+    "muscles": [
+      "lats",
+      "biceps",
+      "traps"
+    ]
+  },
+  {
+    "id": "gorilla-row",
+    "name": "Gorilla Row",
+    "pattern": "pull",
+    "gear": "kettlebell",
+    "muscles": [
+      "lats",
+      "biceps",
+      "traps"
+    ]
+  },
+  {
+    "id": "bodyweight-squat",
+    "name": "Bodyweight Squat",
+    "pattern": "squat",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "split-squat",
+    "name": "Split Squat",
+    "pattern": "squat",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "reverse-lunge",
+    "name": "Reverse Lunge",
+    "pattern": "squat",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "forward-lunge",
+    "name": "Forward Lunge",
+    "pattern": "squat",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "lateral-lunge",
+    "name": "Lateral Lunge",
+    "pattern": "squat",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "step-up",
+    "name": "Step-up",
+    "pattern": "squat",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "bulgarian-split-squat",
+    "name": "Bulgarian Split Squat",
+    "pattern": "squat",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "wall-sit",
+    "name": "Wall Sit",
+    "pattern": "squat",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "standing-calf-raise",
+    "name": "Standing Calf Raise",
+    "pattern": "squat",
+    "gear": "bodyweight",
+    "muscles": [
+      "calves"
+    ]
+  },
+  {
+    "id": "single-leg-calf-raise",
+    "name": "Single-Leg Calf Raise",
+    "pattern": "squat",
+    "gear": "bodyweight",
+    "muscles": [
+      "calves"
+    ]
+  },
+  {
+    "id": "dumbbell-goblet-squat",
+    "name": "Dumbbell Goblet Squat",
+    "pattern": "squat",
+    "gear": "dumbbells",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "dumbbell-reverse-lunge",
+    "name": "Dumbbell Reverse Lunge",
+    "pattern": "squat",
+    "gear": "dumbbells",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "dumbbell-step-up",
+    "name": "Dumbbell Step-up",
+    "pattern": "squat",
+    "gear": "dumbbells",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "dumbbell-bulgarian-split-squat",
+    "name": "Dumbbell Bulgarian Split Squat",
+    "pattern": "squat",
+    "gear": "dumbbells",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "dumbbell-calf-raise",
+    "name": "Dumbbell Calf Raise",
+    "pattern": "squat",
+    "gear": "dumbbells",
+    "muscles": [
+      "calves"
+    ]
+  },
+  {
+    "id": "barbell-back-squat",
+    "name": "Barbell Back Squat",
+    "pattern": "squat",
+    "gear": "barbell",
+    "muscles": [
+      "quads",
+      "glutes",
+      "abs"
+    ]
+  },
+  {
+    "id": "barbell-front-squat",
+    "name": "Barbell Front Squat",
+    "pattern": "squat",
+    "gear": "barbell",
+    "muscles": [
+      "quads",
+      "glutes",
+      "abs"
+    ]
+  },
+  {
+    "id": "box-squat",
+    "name": "Box Squat",
+    "pattern": "squat",
+    "gear": "barbell",
+    "muscles": [
+      "quads",
+      "glutes",
+      "abs"
+    ]
+  },
+  {
+    "id": "pause-squat",
+    "name": "Pause Squat",
+    "pattern": "squat",
+    "gear": "barbell",
+    "muscles": [
+      "quads",
+      "glutes",
+      "abs"
+    ]
+  },
+  {
+    "id": "leg-press",
+    "name": "Leg Press",
+    "pattern": "squat",
+    "gear": "machine",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "hack-squat",
+    "name": "Hack Squat",
+    "pattern": "squat",
+    "gear": "machine",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "belt-squat",
+    "name": "Belt Squat",
+    "pattern": "squat",
+    "gear": "machine",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "leg-extension",
+    "name": "Leg Extension",
+    "pattern": "squat",
+    "gear": "machine",
+    "muscles": [
+      "quads"
+    ]
+  },
+  {
+    "id": "seated-calf-raise",
+    "name": "Seated Calf Raise",
+    "pattern": "squat",
+    "gear": "machine",
+    "muscles": [
+      "calves"
+    ]
+  },
+  {
+    "id": "standing-machine-calf-raise",
+    "name": "Standing Machine Calf Raise",
+    "pattern": "squat",
+    "gear": "machine",
+    "muscles": [
+      "calves"
+    ]
+  },
+  {
+    "id": "band-squat",
+    "name": "Band Squat",
+    "pattern": "squat",
+    "gear": "band",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "band-split-squat",
+    "name": "Band Split Squat",
+    "pattern": "squat",
+    "gear": "band",
+    "muscles": [
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "kettlebell-goblet-squat",
+    "name": "Kettlebell Goblet Squat",
+    "pattern": "squat",
+    "gear": "kettlebell",
+    "muscles": [
+      "quads",
+      "glutes",
+      "abs"
+    ]
+  },
+  {
+    "id": "kettlebell-front-rack-squat",
+    "name": "Kettlebell Front Rack Squat",
+    "pattern": "squat",
+    "gear": "kettlebell",
+    "muscles": [
+      "quads",
+      "glutes",
+      "abs"
+    ]
+  },
+  {
+    "id": "glute-bridge",
+    "name": "Glute Bridge",
+    "pattern": "hinge",
+    "gear": "bodyweight",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "single-leg-glute-bridge",
+    "name": "Single-Leg Glute Bridge",
+    "pattern": "hinge",
+    "gear": "bodyweight",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "bodyweight-good-morning",
+    "name": "Bodyweight Good Morning",
+    "pattern": "hinge",
+    "gear": "bodyweight",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "hamstring-walkout",
+    "name": "Hamstring Walkout",
+    "pattern": "hinge",
+    "gear": "bodyweight",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "single-leg-bodyweight-romanian-deadlift",
+    "name": "Single-Leg Bodyweight Romanian Deadlift",
+    "pattern": "hinge",
+    "gear": "bodyweight",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "bird-dog",
+    "name": "Bird Dog",
+    "pattern": "hinge",
+    "gear": "bodyweight",
+    "muscles": [
+      "lowerBack",
+      "glutes"
+    ]
+  },
+  {
+    "id": "superman",
+    "name": "Superman",
+    "pattern": "hinge",
+    "gear": "bodyweight",
+    "muscles": [
+      "lowerBack",
+      "glutes"
+    ]
+  },
+  {
+    "id": "dumbbell-romanian-deadlift",
+    "name": "Dumbbell Romanian Deadlift",
+    "pattern": "hinge",
+    "gear": "dumbbells",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "dumbbell-stiff-leg-deadlift",
+    "name": "Dumbbell Stiff-Leg Deadlift",
+    "pattern": "hinge",
+    "gear": "dumbbells",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "single-leg-dumbbell-romanian-deadlift",
+    "name": "Single-Leg Dumbbell Romanian Deadlift",
+    "pattern": "hinge",
+    "gear": "dumbbells",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "dumbbell-hip-thrust",
+    "name": "Dumbbell Hip Thrust",
+    "pattern": "hinge",
+    "gear": "dumbbells",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "conventional-deadlift",
+    "name": "Conventional Deadlift",
+    "pattern": "hinge",
+    "gear": "barbell",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "sumo-deadlift",
+    "name": "Sumo Deadlift",
+    "pattern": "hinge",
+    "gear": "barbell",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "barbell-romanian-deadlift",
+    "name": "Barbell Romanian Deadlift",
+    "pattern": "hinge",
+    "gear": "barbell",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "barbell-good-morning",
+    "name": "Barbell Good Morning",
+    "pattern": "hinge",
+    "gear": "barbell",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "barbell-hip-thrust",
+    "name": "Barbell Hip Thrust",
+    "pattern": "hinge",
+    "gear": "barbell",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "barbell-glute-bridge",
+    "name": "Barbell Glute Bridge",
+    "pattern": "hinge",
+    "gear": "barbell",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "cable-pull-through",
+    "name": "Cable Pull-Through",
+    "pattern": "hinge",
+    "gear": "cable",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "cable-romanian-deadlift",
+    "name": "Cable Romanian Deadlift",
+    "pattern": "hinge",
+    "gear": "cable",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "seated-leg-curl",
+    "name": "Seated Leg Curl",
+    "pattern": "hinge",
+    "gear": "machine",
+    "muscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "lying-leg-curl",
+    "name": "Lying Leg Curl",
+    "pattern": "hinge",
+    "gear": "machine",
+    "muscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "standing-leg-curl",
+    "name": "Standing Leg Curl",
+    "pattern": "hinge",
+    "gear": "machine",
+    "muscles": [
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "back-extension",
+    "name": "Back Extension",
+    "pattern": "hinge",
+    "gear": "machine",
+    "muscles": [
+      "lowerBack",
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "reverse-hyperextension",
+    "name": "Reverse Hyperextension",
+    "pattern": "hinge",
+    "gear": "machine",
+    "muscles": [
+      "lowerBack",
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "band-good-morning",
+    "name": "Band Good Morning",
+    "pattern": "hinge",
+    "gear": "band",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "band-hip-thrust",
+    "name": "Band Hip Thrust",
+    "pattern": "hinge",
+    "gear": "band",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ]
+  },
+  {
+    "id": "kettlebell-deadlift",
+    "name": "Kettlebell Deadlift",
+    "pattern": "hinge",
+    "gear": "kettlebell",
+    "muscles": [
+      "glutes",
+      "hamstrings",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "kettlebell-swing",
+    "name": "Kettlebell Swing",
+    "pattern": "hinge",
+    "gear": "kettlebell",
+    "muscles": [
+      "glutes",
+      "hamstrings",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "single-leg-kettlebell-deadlift",
+    "name": "Single-Leg Kettlebell Deadlift",
+    "pattern": "hinge",
+    "gear": "kettlebell",
+    "muscles": [
+      "glutes",
+      "hamstrings",
+      "lowerBack"
+    ]
+  },
+  {
+    "id": "forearm-plank",
+    "name": "Forearm Plank",
+    "pattern": "core",
+    "gear": "bodyweight",
+    "muscles": [
+      "abs"
+    ]
+  },
+  {
+    "id": "dead-bug",
+    "name": "Dead Bug",
+    "pattern": "core",
+    "gear": "bodyweight",
+    "muscles": [
+      "abs"
+    ]
+  },
+  {
+    "id": "reverse-crunch",
+    "name": "Reverse Crunch",
+    "pattern": "core",
+    "gear": "bodyweight",
+    "muscles": [
+      "abs"
+    ]
+  },
+  {
+    "id": "hollow-hold",
+    "name": "Hollow Hold",
+    "pattern": "core",
+    "gear": "bodyweight",
+    "muscles": [
+      "abs"
+    ]
+  },
+  {
+    "id": "crunch",
+    "name": "Crunch",
+    "pattern": "core",
+    "gear": "bodyweight",
+    "muscles": [
+      "abs"
+    ]
+  },
+  {
+    "id": "flutter-kick",
+    "name": "Flutter Kick",
+    "pattern": "core",
+    "gear": "bodyweight",
+    "muscles": [
+      "abs"
+    ]
+  },
+  {
+    "id": "side-plank",
+    "name": "Side Plank",
+    "pattern": "core",
+    "gear": "bodyweight",
+    "muscles": [
+      "abs",
+      "obliques"
+    ]
+  },
+  {
+    "id": "bicycle-crunch",
+    "name": "Bicycle Crunch",
+    "pattern": "core",
+    "gear": "bodyweight",
+    "muscles": [
+      "abs",
+      "obliques"
+    ]
+  },
+  {
+    "id": "heel-touch",
+    "name": "Heel Touch",
+    "pattern": "core",
+    "gear": "bodyweight",
+    "muscles": [
+      "abs",
+      "obliques"
+    ]
+  },
+  {
+    "id": "cross-body-mountain-climber",
+    "name": "Cross-Body Mountain Climber",
+    "pattern": "core",
+    "gear": "bodyweight",
+    "muscles": [
+      "abs",
+      "obliques"
+    ]
+  },
+  {
+    "id": "dumbbell-suitcase-hold",
+    "name": "Dumbbell Suitcase Hold",
+    "pattern": "core",
+    "gear": "dumbbells",
+    "muscles": [
+      "abs",
+      "obliques",
+      "forearms"
+    ]
+  },
+  {
+    "id": "dumbbell-russian-twist",
+    "name": "Dumbbell Russian Twist",
+    "pattern": "core",
+    "gear": "dumbbells",
+    "muscles": [
+      "abs",
+      "obliques",
+      "forearms"
+    ]
+  },
+  {
+    "id": "dumbbell-side-bend",
+    "name": "Dumbbell Side Bend",
+    "pattern": "core",
+    "gear": "dumbbells",
+    "muscles": [
+      "abs",
+      "obliques",
+      "forearms"
+    ]
+  },
+  {
+    "id": "cable-wood-chop",
+    "name": "Cable Wood Chop",
+    "pattern": "core",
+    "gear": "cable",
+    "muscles": [
+      "abs",
+      "obliques"
+    ]
+  },
+  {
+    "id": "cable-pallof-press",
+    "name": "Cable Pallof Press",
+    "pattern": "core",
+    "gear": "cable",
+    "muscles": [
+      "abs",
+      "obliques"
+    ]
+  },
+  {
+    "id": "kneeling-cable-crunch",
+    "name": "Kneeling Cable Crunch",
+    "pattern": "core",
+    "gear": "cable",
+    "muscles": [
+      "abs"
+    ]
+  },
+  {
+    "id": "band-pallof-press",
+    "name": "Band Pallof Press",
+    "pattern": "core",
+    "gear": "band",
+    "muscles": [
+      "abs",
+      "obliques"
+    ]
+  },
+  {
+    "id": "band-wood-chop",
+    "name": "Band Wood Chop",
+    "pattern": "core",
+    "gear": "band",
+    "muscles": [
+      "abs",
+      "obliques"
+    ]
+  },
+  {
+    "id": "hanging-knee-raise",
+    "name": "Hanging Knee Raise",
+    "pattern": "core",
+    "gear": "pullupBar",
+    "muscles": [
+      "abs",
+      "forearms"
+    ]
+  },
+  {
+    "id": "hanging-leg-raise",
+    "name": "Hanging Leg Raise",
+    "pattern": "core",
+    "gear": "pullupBar",
+    "muscles": [
+      "abs",
+      "forearms"
+    ]
+  },
+  {
+    "id": "kettlebell-windmill",
+    "name": "Kettlebell Windmill",
+    "pattern": "core",
+    "gear": "kettlebell",
+    "muscles": [
+      "abs",
+      "obliques",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "kettlebell-halo",
+    "name": "Kettlebell Halo",
+    "pattern": "core",
+    "gear": "kettlebell",
+    "muscles": [
+      "abs",
+      "obliques",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "brisk-walk",
+    "name": "Brisk Walk",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "easy-jog",
+    "name": "Easy Jog",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "stair-climb",
+    "name": "Stair Climb",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "shadowboxing",
+    "name": "Shadowboxing",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "abs",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "mountain-climbers",
+    "name": "Mountain Climbers",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "abs",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "low-impact-jumping-jacks",
+    "name": "Low-Impact Jumping Jacks",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "abs",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "treadmill-incline-walk",
+    "name": "Treadmill Incline Walk",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "stationary-bike",
+    "name": "Stationary Bike",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "elliptical",
+    "name": "Elliptical",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "stair-climber",
+    "name": "Stair Climber",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "rowing-ergometer",
+    "name": "Rowing Ergometer",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "lats",
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "kettlebell-farmer-carry",
+    "name": "Kettlebell Farmer Carry",
+    "pattern": "conditioning",
+    "gear": "kettlebell",
+    "muscles": [
+      "traps",
+      "forearms",
+      "abs"
+    ]
+  },
+  {
+    "id": "outdoor-brisk-walk",
+    "name": "Outdoor Brisk Walk",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "outdoor-run-walk-intervals",
+    "name": "Outdoor Run-Walk Intervals",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "outdoor-easy-run",
+    "name": "Outdoor Easy Run",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "outdoor-tempo-run",
+    "name": "Outdoor Tempo Run",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "outdoor-long-run",
+    "name": "Outdoor Long Run",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "outdoor-recovery-walk",
+    "name": "Outdoor Recovery Walk",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "hiking",
+    "name": "Hiking",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "jump-rope-intervals",
+    "name": "Jump Rope Intervals",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "calves",
+      "shoulders"
+    ]
+  },
+  {
+    "id": "treadmill-easy-run",
+    "name": "Treadmill Easy Run",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "treadmill-run-walk",
+    "name": "Treadmill Run-Walk Intervals",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "treadmill-tempo-run",
+    "name": "Treadmill Tempo Run",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "treadmill-long-run",
+    "name": "Treadmill Long Run",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "treadmill-recovery-walk",
+    "name": "Treadmill Recovery Walk",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "bike-easy-ride",
+    "name": "Stationary Bike Easy Ride",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "bike-intervals",
+    "name": "Stationary Bike Intervals",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "bike-tempo",
+    "name": "Stationary Bike Tempo Ride",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "bike-recovery",
+    "name": "Stationary Bike Recovery Ride",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "elliptical-steady",
+    "name": "Elliptical Steady Session",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "elliptical-intervals",
+    "name": "Elliptical Intervals",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "rowing-steady",
+    "name": "Rowing Machine Steady Session",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "lats",
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "rowing-intervals",
+    "name": "Rowing Machine Intervals",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "lats",
+      "quads",
+      "glutes"
+    ]
+  },
+  {
+    "id": "stair-climber-steady",
+    "name": "Stair Climber Steady Session",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "stair-climber-intervals",
+    "name": "Stair Climber Intervals",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "swim-easy",
+    "name": "Easy Swim",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "shoulders",
+      "lats",
+      "abs"
+    ]
+  },
+  {
+    "id": "swim-intervals",
+    "name": "Swim Intervals",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "shoulders",
+      "lats",
+      "abs"
+    ]
+  },
+  {
+    "id": "dance-cardio",
+    "name": "Dance Cardio",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "low-impact-cardio",
+    "name": "Low-Impact Cardio",
+    "pattern": "conditioning",
+    "gear": "bodyweight",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "treadmill-incline",
+    "name": "Treadmill Incline Walk",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ]
+  },
+  {
+    "id": "rower-easy",
+    "name": "Rowing Machine Easy Session",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": [
+      "lats",
+      "quads",
+      "glutes"
+    ]
+  }
+]
