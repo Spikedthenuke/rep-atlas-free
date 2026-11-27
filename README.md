@@ -1,32 +1,28 @@
 # Rep Atlas
 
-A free workout planner for your iPhone Home Screen. This static site runs from GitHub Pages. Workout data stays in local storage on the phone. No Apple developer membership or Mac is needed.
+A free workout planner for your iPhone Home Screen. The site runs from GitHub Pages, and workout plans, goals, and logs stay in local storage on your phone.
 
 ## Publish with GitHub Pages
 
-This repository contains the site files in its root folder.
+The site files are in the repository root. In GitHub, open **Settings → Pages**, choose **Deploy from a branch**, select the **main** branch and **/(root)** folder, and save. After publishing, open the Pages URL in iPhone Safari, tap **Share → Add to Home Screen**, enable **Open as Web App**, and tap **Add**.
 
-1. On GitHub, open **Settings → Pages**.
-2. Under **Build and deployment**, choose **Deploy from a branch**.
-3. Choose the `main` branch and the `/(root)` folder, then save.
-4. After GitHub publishes the site, open the URL shown on the Pages settings page in Safari on your iPhone.
-5. Tap **Share → Add to Home Screen**, enable **Open as Web App**, then tap **Add**.
-
-GitHub Free Pages hosting requires a public repository. The source and website are public. Plans, exercise changes, workout logs, and goals remain on the phone in local web storage, with a backup and restore option in the app.
+GitHub Free Pages hosting requires a public repository. The source and website are public. The app includes backup and restore for data stored on the phone.
 
 ## Features
 
-- Plan builder with full body, upper/lower, push/pull/legs, and cardio splits.
-- Mark available dates on a calendar; new plans schedule into the selected week and repeat on those weekdays.
-- Change between light and dark appearance with a slider in Settings.
-- Option to add cardio blocks to strength sessions, with cardio included automatically for endurance goals.
-- Goal based workout suggestions and four plan variations.
-- Searchable, editable library of 199 exercises.
-- Front and back muscle maps with selected groups highlighted red.
-- Missed workout recovery plans that skip the missed session, preserve the remaining schedule, and continue your split.
-- Workout logs, goals, and backup/restore.
-- Offline use after the site is first opened in Safari and cached.
+- Build full body, upper/lower, push/pull/legs, cardio, and mixed strength/cardio plans.
+- Mark workout availability on the calendar; plans use selected days and repeat weekly.
+- Recover after a missed workout by rescheduling the remaining split appropriately.
+- Set goals, explore plan variations, track workout history, and edit or create exercises.
+- Search a library of 199 exercises.
+- View front and back muscle maps with selected groups highlighted in red.
+- Switch light and dark appearance with a slider.
+- Use the site offline after it has been opened once and cached.
 
-## Push reminders
+## Optional push reminders
 
-Push reminders are not connected in this GitHub Pages version. iPhone web push requires iOS 16.4 or later, adding the site to the Home Screen, notification permission, and a server that stores the device subscription and sends reminders. GitHub Pages serves static files and cannot run that sender. A free serverless option can run the sender without an always-on computer, but it would store the push subscription and reminder schedule with that provider. The app does not send workout logs to such a service.
+GitHub Pages serves static files and cannot send push notifications by itself. Rep Atlas can use a free Cloudflare Worker and D1 database to send one reminder on a scheduled workout day. It runs without an always-on computer.
+
+Follow the [Cloudflare setup guide](cloudflare/README.md). You will create the Worker and database in your Cloudflare account, then paste the Worker URL and a private app token into Rep Atlas Settings. The subscription endpoint, selected reminder weekdays, time, and timezone are stored in Cloudflare. Your workout plans, goals, and logs remain on your phone.
+
+Web push requires iOS 16.4 or later, installing the site on the Home Screen, and allowing notifications. Reminders are optional and will not work until the Cloudflare setup is complete.
