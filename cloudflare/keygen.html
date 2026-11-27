@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rep Atlas push setup keys</title>
+  <style>
+    body{font:16px system-ui,sans-serif;max-width:700px;margin:32px auto;padding:0 16px;color:#202024;background:#f7f5f3}section{background:white;border:1px solid #e8e4e1;border-radius:16px;padding:20px;margin:14px 0}p{line-height:1.55;color:#666}button{border:0;border-radius:10px;padding:11px 14px;font:inherit;font-weight:700;background:#d93442;color:white}label{display:block;font-weight:700;margin:18px 0 6px}textarea{width:100%;box-sizing:border-box;min-height:70px;padding:10px;border:1px solid #ddd;border-radius:8px;font:12px monospace}.private{min-height:145px}.row{display:flex;gap:8px;align-items:flex-start}.row button{background:#eee;color:#222;font-size:13px}#output{display:none}
+  </style>
+</head>
+<body>
+  <h1>Rep Atlas push setup keys</h1>
+  <section><p>Generate the values needed by your private Cloudflare Worker. This page creates them in your browser and does not upload them. Keep the private key and app token secret; do not commit them to GitHub.</p><button id="generate" type="button">Generate setup keys</button></section>
+  <section id="output">
+    <label for="public-key">Worker text variable: VAPID_PUBLIC_KEY</label><div class="row"><textarea id="public-key" readonly></textarea><button data-copy="public-key">Copy</button></div>
+    <label for="private-key">Worker secret: VAPID_PRIVATE_JWK</label><div class="row"><textarea id="private-key" class="private" readonly></textarea><button data-copy="private-key">Copy</button></div>
+    <label for="api-token">Worker secret: APP_API_TOKEN</label><div class="row"><textarea id="api-token" readonly></textarea><button data-copy="api-token">Copy</button></div>
+    <p>Put the public key in a regular text variable in Cloudflare. Put the private JWK and app token in Worker secrets. Enter the app token in Rep Atlas Settings after deploying the Worker.</p>
+  </section>
+<script>
+const encode=value=>{let binary="";for(const byte of value)binary+=String.fromCharCode(byte);return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"")};
+const decode=value=>{const text=value.replace(/-/g,"+").replace(/_/g,"/");const binary=atob(text+"=".repeat((4-text.length%4)%4));return Uint8Array.from(binary,ch=>ch.charCodeAt(0))};
+document.querySelector("#generate").addEventListener("click",async()=>{
+  const pair=await crypto.subtle.generateKey({name:"ECDSA",namedCurve:"P-256"},true,["sign","verify"]);
+  const jwk=await crypto.subtle.exportKey("jwk",pair.privateKey);
+  const raw=new Uint8Array(65);raw[0]=4;raw.set(decode(jwk.x),1);raw.set(decode(jwk.y),33);
+  document.querySelector("#public-key").value=encode(raw);
+  document.querySelector("#private-key").value=JSON.stringify(jwk);
+  const token=crypto.getRandomValues(new Uint8Array(32));document.querySelector("#api-token").value=encode(token);
+  document.querySelector("#output").style.display="block";
+});
+document.addEventListener("click",async event=>{const button=event.target.closest("[data-copy]");if(!button)return;await navigator.clipboard.writeText(document.getElementById(button.dataset.copy).value);const label=button.textContent;button.textContent="Copied";setTimeout(()=>button.textContent=label,1000)});
+</script>
+</body>
+</html>
