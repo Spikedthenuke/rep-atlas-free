@@ -17,9 +17,11 @@ GitHub Free Pages hosting requires a public repository. The source and website a
 ## Features
 
 - Plan builder with full body, upper/lower, push/pull/legs, and cardio splits.
+- Assign each workout to chosen weekdays on a repeating weekly schedule; update the days later.
+- Option to add cardio blocks to strength sessions, with cardio included automatically for endurance goals.
 - Goal based workout suggestions and four plan variations.
 - Searchable, editable library of 199 exercises.
 - Front and back muscle maps with selected groups highlighted red.
-- Missed workout recovery plans that skip the missed session and continue your split.
+- Missed workout recovery plans that skip the missed session, preserve the remaining schedule, and continue your split.
 - Workout logs, goals, and backup/restore.
 - Offline use after the site is first opened in Safari and cached.
