@@ -288,8 +288,7 @@ function openWorkoutEditor(day = null) {
 
 function renderWorkoutEditor(name) {
   const lines = logDraft.map((set, index) => {
-    const weightField = set.unit === "reps"
-      ? `<input inputmode="decimal" type="number" min="0" step="0.5" data-log-weight="${index}" value="${set.weight || ""}" placeholder="${data.weightUnit}" aria-label="Weight">`
+    const weightField = set.unit === "reps"      ? '<div class="set-weight-control"><label class="set-weight-label" data-set-number="'+(index+1)+'" for="log-weight-'+index+'">Weight for set '+(index+1)+' ('+data.weightUnit+')</label><input id="log-weight-slider-'+index+'" type="range" min="0" max="'+(data.weightUnit === "kg" ? 300 : 600)+'" step="0.5" data-log-weight-slider="'+index+'" value="'+(set.weight || 0)+'" aria-label="Weight slider for set '+(index+1)+'"><input id="log-weight-'+index+'" inputmode="decimal" type="number" min="0" step="0.5" data-log-weight="'+index+'" value="'+(set.weight || "")+'" placeholder="0" aria-label="Weight for set '+(index+1)+'"></div>'
       : `<span></span>`;
     return `<div class="log-set"><label><input type="checkbox" data-log-done="${index}" ${set.done ? "checked" : ""}>${escapeHTML(set.exercise.name)}</label><input inputmode="numeric" type="number" min="1" data-log-amount="${index}" value="${set.amount}" aria-label="${escapeHTML(set.unit)}">${weightField}<button class="text-button" type="button" data-remove-log="${index}" aria-label="Remove">×</button></div>`;
   }).join("");
@@ -409,8 +408,7 @@ document.addEventListener("input", event => {
     event.target.setAttribute("aria-valuetext",data.theme==="dark"?"Dark":"Light");
   }
   if(event.target.dataset.logDone!==undefined) logDraft[Number(event.target.dataset.logDone)].done=event.target.checked;
-  if(event.target.dataset.logAmount!==undefined) logDraft[Number(event.target.dataset.logAmount)].amount=Number(event.target.value)||0;
-  if(event.target.dataset.logWeight!==undefined) logDraft[Number(event.target.dataset.logWeight)].weight=Number(event.target.value)||0;
+  if(event.target.dataset.logAmount!==undefined) logDraft[Number(event.target.dataset.logAmount)].amount=Number(event.target.value)||0;  if(event.target.dataset.logWeight!==undefined||event.target.dataset.logWeightSlider!==undefined){const index=Number(event.target.dataset.logWeight??event.target.dataset.logWeightSlider),weight=Math.max(0,Number(event.target.value)||0),number=document.querySelector('[data-log-weight="'+index+'"]'),slider=document.querySelector('[data-log-weight-slider="'+index+'"]');logDraft[index].weight=weight;if(number&&number!==event.target)number.value=weight?String(weight):"";if(slider&&slider!==event.target){if(weight>Number(slider.max))slider.max=String(Math.ceil(weight/50)*50);slider.value=String(weight)}}
 });
 
 document.addEventListener("submit", event => {
