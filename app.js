@@ -674,48 +674,6 @@ function renderPlanDetail(plan) {
 
 function stepper(value, key) { return `<span class="stepper"><button type="button" data-adjust="${escapeHTML(key)}" data-delta="-1" aria-label="Decrease">−</button><output>${value}</output><button type="button" data-adjust="${escapeHTML(key)}" data-delta="1" aria-label="Increase">+</button></span>`; }
 
-const muscleMapGeometry = (() => {
-  const pair = (muscle,d,view) => [
-    {muscle,side:view === "front" ? "right" : "left",d},
-    {muscle,side:view === "front" ? "left" : "right",d,mirror:true}
-  ];
-  const front = [
-    ...pair("shoulders","M52 42 C47 40 41 42 37 47 C33 52 32 58 35 63 C38 66 42 65 46 61 C50 58 53 55 55 52Z","front"),
-    ...pair("chest","M52 53 C57 50 64 50 70 53 L70 77 C64 79 57 77 52 73 C49 68 49 59 52 53Z","front"),
-    ...pair("serratus","M48 67 Q52 68 55 72 L54 77 Q51 75 47 74Z","front"),
-    ...pair("serratus","M47 76 Q51 77 54 80 L53 85 Q50 82 46 82Z","front"),
-    ...pair("serratus","M46 85 Q50 86 53 89 L52 94 Q49 91 45 91Z","front"),
-    ...pair("biceps","M39 58 C42 58 46 61 46 66 L43 77 Q41 83 37 87 L32 83 L35 70 Q36 62 39 58Z","front"),
-    ...pair("triceps","M34 59 C31 63 29 69 27 76 L25 83 Q28 87 32 86 L38 74 L41 63Z","front"),
-    ...pair("forearms","M24 86 Q28 89 33 87 L31 98 L27 110 Q24 114 20 111 L20 102Z","front"),
-    ...pair("obliques","M50 77 Q55 79 59 82 L58 112 Q55 119 50 122 C52 108 51 93 50 77Z","front"),
-    ...pair("abs","M61 80 Q65 79 69 81 L69 90 Q65 92 61 90Z","front"),
-    ...pair("abs","M61 93 Q65 94 69 92 L69 101 Q65 103 61 101Z","front"),
-    ...pair("abs","M62 104 Q66 105 69 103 L69 112 Q66 114 62 112Z","front"),
-    ...pair("quads","M50 115 C56 116 62 120 66 127 L64 144 C62 156 59 167 55 174 Q50 176 46 171 L42 161 Q41 146 44 133 C45 126 47 120 50 115Z","front"),
-    ...pair("quads","M58 124 Q62 125 66 130 L64 154 Q62 165 58 172 Q54 171 53 167 C56 154 57 139 58 124Z","front"),
-    ...pair("adductors","M64 125 Q67 124 69 126 L69 160 Q67 168 64 170 Q61 167 60 163 Q64 146 64 125Z","front"),
-    ...pair("calves","M47 179 Q52 182 58 179 C57 190 54 202 53 215 L49 228 Q45 231 41 228 L43 215 Q44 198 45 188Z","front")
-  ];
-  const back = [
-    ...pair("shoulders","M52 42 C47 40 41 42 37 47 C33 52 32 58 35 63 C38 66 42 65 46 61 C50 58 53 55 55 52Z","back"),
-    ...pair("traps","M64 39 Q70 44 76 39 L84 45 Q81 54 77 64 L70 70 L63 64 Q59 54 56 45Z","back"),
-    ...pair("upperBack","M55 53 Q61 56 69 63 L69 82 Q64 85 59 82 Q55 74 52 65Z","back"),
-    ...pair("upperBack","M56 67 Q62 70 68 77 L67 94 Q62 96 58 92 L53 80Z","back"),
-    ...pair("lats","M53 70 Q59 73 66 79 L66 112 Q62 120 56 124 Q52 110 49 96 Q47 82 53 70Z","back"),
-    ...pair("lowerBack","M63 80 Q66 83 69 83 L69 125 Q65 131 60 130 Q62 112 61 98Z","back"),
-    ...pair("triceps","M39 59 C35 60 32 65 30 72 L27 83 Q28 88 32 90 L38 82 L44 66Z","back"),
-    ...pair("forearms","M25 86 Q29 89 33 87 L31 99 L27 111 Q24 114 20 111 L20 103Z","back"),
-    ...pair("obliques","M52 82 Q57 86 61 93 L60 122 Q56 128 51 130 Q54 110 52 82Z","back"),
-    ...pair("glutes","M51 113 Q59 109 69 114 L69 136 Q64 142 57 143 Q49 140 46 133 Q46 122 51 113Z","back"),
-    ...pair("hamstrings","M49 140 Q57 142 66 137 L65 162 Q62 175 57 181 Q50 181 46 174 Q43 167 45 156Z","back"),
-    ...pair("hamstrings","M59 141 Q63 141 67 139 L66 166 Q64 176 61 179 Q57 177 56 173 Q60 159 59 141Z","back"),
-    ...pair("calves","M47 180 Q52 183 58 180 C57 192 54 204 53 217 L49 230 Q45 233 41 230 L43 217 Q44 200 45 189Z","back"),
-    ...pair("calves","M53 184 Q58 183 61 180 C61 193 58 204 57 214 L54 225 Q51 227 48 225 L50 213 Q51 197 53 184Z","back")
-  ];
-  return {front,back};
-})();
-
 let muscleMapInstance = 0;
 
 function muscleMap(exercises = [], workout = null) {
@@ -767,19 +725,23 @@ function muscleMap(exercises = [], workout = null) {
     ? "Primary muscles: " + (primary.join(", ") || "none") + ". Secondary muscles: " + (secondary.join(", ") || "none") + "."
     : "No muscles selected. Both figures are inactive.";
   const mapId = "muscle-map-" + (++muscleMapInstance);
-  const silhouetteMaskId = mapId + "-silhouette";
-  const renderFigure = view => {
-    const figureTransform = view === "front" ? "translate(10 5)" : "translate(150 5)";
-    const regions = muscleMapGeometry[view].map((shape,index) => {
-      const role = roles.get(shape.muscle)?.get(shape.side) || "inactive";
-      const transform = shape.mirror ? ' transform="translate(140 0) scale(-1 1)"' : "";
-      const regionId = mapId + "-" + view + "-" + shape.side + "-" + shape.muscle + "-" + index;
-      return '<path id="' + regionId + '" class="muscle-region" data-muscle-id="' + shape.muscle + '" data-side="' + shape.side + '" data-role="' + role + '" d="' + shape.d + '"' + transform + '/>';
-    }).join("");
-    return '<g transform="' + figureTransform + '"><g class="muscle-regions">' + regions + '</g></g>';
-  };
+  const assets = new Set(muscles);
+  const layers = [...roles].flatMap(([muscle,bySide]) => [...bySide].map(([side,role])=>({muscle,side,role})))
+    .filter(item=>assets.has(item.muscle))
+    .sort((a,b)=>(a.role === "primary" ? 1 : 0) - (b.role === "primary" ? 1 : 0));
+  const defs = layers.map(item=>{
+    const slug = item.muscle.replace(/([a-z0-9])([A-Z])/g,"$1-$2").toLowerCase();
+    const maskId = mapId + "-" + slug + "-" + item.side;
+    const maskSrc = "./muscle-mask-" + slug + "-" + item.side + ".png";
+    return '<mask id="' + maskId + '" x="0" y="0" width="1280" height="1280" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" style="mask-type:alpha"><image href="' + maskSrc + '" x="0" y="0" width="1280" height="1280" preserveAspectRatio="none"/></mask>';
+  }).join("");
+  const regions = layers.map(item=>{
+    const slug = item.muscle.replace(/([a-z0-9])([A-Z])/g,"$1-$2").toLowerCase();
+    const maskId = mapId + "-" + slug + "-" + item.side;
+    return '<rect class="muscle-region" data-muscle-id="' + item.muscle + '" data-side="' + item.side + '" data-role="' + item.role + '" x="0" y="0" width="1280" height="1280" mask="url(#' + maskId + ')"/>';
+  }).join("");
   const alt = "Muscle map. " + description;
-  return '<div class="muscle-map"><svg class="anatomy-figure" viewBox="0 0 1280 1280" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + escapeHTML(alt) + '"><title>Front and back muscle map</title><desc>' + escapeHTML(description) + '</desc><defs><mask id="' + silhouetteMaskId + '" maskUnits="userSpaceOnUse" x="0" y="0" width="1280" height="1280"><image href="./muscle-map-silhouette.png" x="0" y="0" width="1280" height="1280" preserveAspectRatio="none"/></mask></defs><image class="anatomy-raster" href="./muscle-map-neutral.png" x="0" y="0" width="1280" height="1280" preserveAspectRatio="none" aria-hidden="true"/><g mask="url(#' + silhouetteMaskId + ')"><g transform="scale(4.413793103448276)">' + renderFigure("front") + renderFigure("back") + '</g></g></svg></div>';
+  return '<div class="muscle-map"><svg class="anatomy-figure" viewBox="0 0 1280 1280" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + escapeHTML(alt) + '"><title>Front and back muscle map</title><desc>' + escapeHTML(description) + '</desc><defs>' + defs + '</defs><image class="anatomy-raster" href="./muscle-map-neutral.png" x="0" y="0" width="1280" height="1280" preserveAspectRatio="none" aria-hidden="true"/><g class="muscle-regions">' + regions + '</g></svg></div>';
 }
 
 function exercisePrimaryMuscles(exercise) {
