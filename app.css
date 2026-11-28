@@ -543,10 +543,6 @@ main {
 
 .muscle-region {
   fill: var(--muscle-inactive);
-  stroke: var(--muscle-seams);
-  stroke-width: .55;
-  stroke-linecap: round;
-  stroke-linejoin: round;
   transition: fill .16s ease
 }
 

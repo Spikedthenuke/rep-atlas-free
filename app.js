@@ -767,7 +767,7 @@ function muscleMap(exercises = [], workout = null) {
     ? "Primary muscles: " + (primary.join(", ") || "none") + ". Secondary muscles: " + (secondary.join(", ") || "none") + "."
     : "No muscles selected. Both figures are inactive.";
   const mapId = "muscle-map-" + (++muscleMapInstance);
-  const neutralFilterId = mapId + "-neutral";
+  const silhouetteMaskId = mapId + "-silhouette";
   const renderFigure = view => {
     const figureTransform = view === "front" ? "translate(10 5)" : "translate(150 5)";
     const regions = muscleMapGeometry[view].map((shape,index) => {
@@ -779,7 +779,7 @@ function muscleMap(exercises = [], workout = null) {
     return '<g transform="' + figureTransform + '"><g class="muscle-regions">' + regions + '</g></g>';
   };
   const alt = "Muscle map. " + description;
-  return '<div class="muscle-map"><svg class="anatomy-figure" viewBox="0 0 290 265" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + escapeHTML(alt) + '"><title>Front and back muscle map</title><desc>' + escapeHTML(description) + '</desc><defs><filter id="' + neutralFilterId + '" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/></filter></defs><image class="anatomy-raster" href="./muscle-map-reference.png" x="0" y="0" width="290" height="265" preserveAspectRatio="none" filter="url(#' + neutralFilterId + ')" aria-hidden="true"/>' + renderFigure("front") + renderFigure("back") + '</svg></div>';
+  return '<div class="muscle-map"><svg class="anatomy-figure" viewBox="0 0 290 265" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + escapeHTML(alt) + '"><title>Front and back muscle map</title><desc>' + escapeHTML(description) + '</desc><defs><mask id="' + silhouetteMaskId + '" maskUnits="userSpaceOnUse" x="0" y="0" width="290" height="265"><image href="./muscle-map-silhouette.png" x="0" y="0" width="290" height="265" preserveAspectRatio="none"/></mask></defs><image class="anatomy-raster" href="./muscle-map-neutral.png" x="0" y="0" width="290" height="265" preserveAspectRatio="none" aria-hidden="true"/><g mask="url(#' + silhouetteMaskId + ')">' + renderFigure("front") + renderFigure("back") + '</g><image class="anatomy-seams" href="./muscle-map-seams.png" x="0" y="0" width="290" height="265" preserveAspectRatio="none" aria-hidden="true"/></svg></div>';
 }
 
 function exercisePrimaryMuscles(exercise) {
