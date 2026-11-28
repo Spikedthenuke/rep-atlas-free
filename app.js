@@ -634,18 +634,35 @@ function openBuilder(draft = {}) {
 
 function builderDates(start, followsCalendar) {
   if (!validDateKey(start)) return [];
-  const first = followsCalendar ? nextAvailableDate(start) : start;
-  return availabilityForWeek(first);
+  if (followsCalendar) {
+    const first = nextAvailableDate(start);
+    return first ? availabilityForWeek(first) : [];
+  }
+  const selectedDates = availabilityForWeek(start);
+  if (selectedDates.length) return selectedDates;
+
+  // A new user may not have marked calendar availability yet. Give the plan
+  // builder a useful weekly schedule instead of producing an empty plan.
+  const defaultDays = new Set(defaultWeeklyDays(3));
+  return Array.from({length: 7}, (_, index) => addDays(start, index))
+    .filter(date => defaultDays.has(weekdayForDate(date)));
 }
 
 function updateBuilderSchedule(form) {
   const preview = form.querySelector("#schedule-preview");
   const follows = form.elements.followsCalendar.checked;
-  const dates = builderDates(form.elements.startDate.value, follows);
-  const note = follows ? "Your sessions cycle in order on available dates." : "These weekdays repeat each week.";
+  const start = form.elements.startDate.value;
+  const markedDates = availabilityForWeek(start);
+  const usingDefault = !follows && !markedDates.length;
+  const dates = builderDates(start, follows);
+  const note = follows
+    ? "Your sessions cycle in order on available dates."
+    : usingDefault
+      ? "No calendar days are marked yet, so this starts with a default Monday / Wednesday / Friday schedule. You can edit the days after previewing."
+      : "These weekdays repeat each week.";
   preview.innerHTML=dates.length
     ? `<strong>${dates.length} session${dates.length===1?"":"s"} in the first week</strong><span>${dates.map(value=>escapeHTML(displayDate(value))).join(" · ")}</span><span>${note}</span>`
-    : `<strong>No available days ${follows ? "from this date" : "in this week"}</strong><span>Mark dates on the calendar or choose another start date.</span>`;
+    : `<strong>No available days from this date</strong><span>Mark training days on the calendar, or turn off calendar syncing to use a weekly schedule.</span>`;
 }
 
 function previewPlan(plan, draft) {
