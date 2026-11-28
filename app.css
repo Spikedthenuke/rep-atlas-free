@@ -523,7 +523,7 @@ main {
   display: block;
   width: 100%;
   max-width: 480px;
-  aspect-ratio: 290 / 265;
+  aspect-ratio: 1;
   margin: 0 auto;
   padding: 0;
   background: var(--muscle-background);
