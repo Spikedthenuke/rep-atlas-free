@@ -77,6 +77,9 @@ let tab = "plans";
 let openPlanId = null;
 let librarySearch = "";
 let logDraft = [];
+let workoutContext = null;
+let workoutWeightUnit = "lb";
+let progressExerciseId = "";
 let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
 const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
@@ -171,16 +174,75 @@ function exerciseInstructions(exercise) {
   return [setup,"Set a stable stance and brace lightly before moving.","Move through the exercise's comfortable range with a smooth, controlled tempo.","Return to the start slowly and keep your joints aligned with the direction of movement.","Breathe steadily and stop if you feel sharp pain or lose control of the movement."];
 }
 
+function cardioDurationFor(exercise) {
+  const id=String(exercise.id||"").toLowerCase();
+  if(/long-run|hiking/.test(id))return 35;
+  if(/tempo/.test(id))return 30;
+  if(/recovery/.test(id))return 20;
+  if(/interval|run-walk|jump-rope/.test(id))return 20;
+  if(/easy|steady/.test(id))return 30;
+  return 25;
+}
+
+function cardioPrescription(exercise, duration=30) {
+  if(exercise.pattern!=="conditioning")return null;
+  const id=String(exercise.id||"").toLowerCase(),name=String(exercise.name||"").toLowerCase();
+  const minutes=Math.max(10,Number(duration)||30);
+  const recovery=/recovery/.test(id+" "+name),long=/long-run|hiking/.test(id+" "+name),tempo=/tempo/.test(id+" "+name),interval=/interval|run-walk|jump-rope/.test(id+" "+name),carry=/farmer-carry/.test(id+" "+name);
+  const warmup=recovery||carry?3:5,cooldown=recovery||carry?3:5,mainMinutes=Math.max(4,minutes-warmup-cooldown);
+  let main;
+  if(carry)main="4–6 carries of 30–45 seconds; walk or rest 60–90 seconds between carries.";
+  else if(/swim/.test(id+" "+name)&&interval)main="8 × 50 m: swim each length at RPE 6–7, then rest or easy-swim 20–30 seconds. Adjust the distance to your pool length.";
+  else if(/swim/.test(id+" "+name))main=`Swim easily for ${mainMinutes} minutes, pausing briefly at the wall whenever needed.`;
+  else if(/jump-rope/.test(id+" "+name)){
+    const rounds=Math.max(4,Math.floor(mainMinutes/1.5));
+    main=`${rounds} rounds of 30 seconds of relaxed jumping and 60 seconds of easy marching or rest.`;
+  } else if(/run-walk/.test(id+" "+name)){
+    const rounds=Math.max(3,Math.floor(mainMinutes/3));
+    main=`${rounds} rounds of 1 minute easy jogging (RPE 5–6) and 2 minutes brisk walking (RPE 2–3).`;
+  } else if(interval){
+    const rounds=Math.max(3,Math.floor(mainMinutes/2));
+    main=`${rounds} rounds of 1 minute strong (RPE 7) and 1 minute easy (RPE 2–3). Keep the hard efforts controlled, not all-out.`;
+  } else if(tempo)main=`3 rounds of 5 minutes at a comfortably hard RPE 6, with 2 minutes easy between rounds. Use the remaining time for relaxed steady movement.`;
+  else if(long)main=`Stay at an easy conversational effort (RPE 3–4) for ${mainMinutes} minutes. Slow down or take short walk breaks as needed.`;
+  else if(recovery)main=`Keep ${mainMinutes} minutes very easy (RPE 2–3); you should be able to speak in full sentences throughout.`;
+  else main=`Hold a steady, conversational effort (RPE 3–5) for ${mainMinutes} minutes. You should be able to speak in full sentences.`;
+
+  let settings;
+  if(/treadmill-incline/.test(id))settings="Walking: start around 3% incline and 2.5–3.5 mph, then adjust speed so effort stays at the target RPE. Keep the rails for balance only.";
+  else if(/treadmill/.test(id))settings="Running: begin at 0–1% incline and choose a pace by RPE, not a fixed speed. Use a walk pace for recoveries.";
+  else if(/bike/.test(id))settings="Aim for 70–90 rpm. Start easy at resistance 2–4/10; for hard intervals use about 5–7/10 and reduce to 2–3/10 for recovery.";
+  else if(/elliptical/.test(id))settings="Use a smooth stride. Start around resistance 3–5/10; raise to 6–8/10 only for hard intervals, then return to 2–4/10.";
+  else if(/stair-climber/.test(id))settings="Start around level 2–4/20; for hard intervals try 5–8/20 and return to 2–3/20. Stay tall and avoid leaning on the rails.";
+  else if(/rowing/.test(id)||/rower/.test(id))settings="Easy strokes: 18–22 per minute; hard intervals: 26–30. Keep the damper near 3–5 (or drag factor about 100–120) and prioritize smooth strokes.";
+  else if(/swim/.test(id))settings="Use a relaxed stroke and a pace that keeps breathing controlled. Rest at the wall; use shorter lengths if technique starts to fade.";
+  else if(/jump-rope/.test(id))settings="Use small, quiet hops on a clear, level surface; choose a rope that reaches about chest height when folded under one foot.";
+  else if(carry)settings="Use a kettlebell load that challenges your grip but lets you keep shoulders level and walk steadily; stop before posture changes.";
+  else if(/hiking/.test(id))settings="Choose a safe route and keep the climb at RPE 3–5; shorten the route or take breaks on steeper sections.";
+  else if(/dance|shadowboxing/.test(id))settings="Use a clear floor and keep the movement low-impact if needed; work at RPE 4–6 and stay able to control each step.";
+  else settings="Use low-impact movements at a pace you can control; aim for RPE 3–5 and take short breaks before form changes.";
+
+  return {duration:minutes,warmup:`${warmup} minutes easy, gradually building pace`,main,cooldown:`${cooldown} minutes very easy, gradually slowing down`,intensity:interval?"Hard portions RPE 7/10; recovery portions RPE 2–3/10.":tempo?"Work portions RPE 6/10; easy portions RPE 2–3/10.":recovery?"RPE 2–3/10. Keep this session restorative.":"Steady portions RPE 3–5/10; keep breathing controlled.",settings};
+}
+
+function cardioPrescriptionMarkup(exercise,duration=30,compact=false) {
+  const plan=cardioPrescription(exercise,duration);
+  if(!plan)return "";
+  const content=`<div><strong>Warm-up</strong><span>${escapeHTML(plan.warmup)}</span></div><div><strong>Main set</strong><span>${escapeHTML(plan.main)}</span></div><div><strong>Cool-down</strong><span>${escapeHTML(plan.cooldown)}</span></div><div><strong>Effort</strong><span>${escapeHTML(plan.intensity)}</span></div><div><strong>Settings</strong><span>${escapeHTML(plan.settings)}</span></div>`;
+  return `<section class="cardio-prescription${compact?" compact":""}"><div class="row"><strong>${compact?"Cardio target":"Suggested cardio session"}</strong><span class="badge">${plan.duration} min</span></div><div class="cardio-prescription-grid">${content}</div></section>`;
+}
+
 function withExerciseDetails(exercise) {
   const equipment = equipmentNeeded(exercise);
   const description=typeof exercise.description==="string"?exercise.description.trim():"";
   const instructions=Array.isArray(exercise.instructions)?exercise.instructions.map(step=>String(step).trim()).filter(Boolean):[];
-  return {...exercise, description:description || exerciseDescription(exercise), specificEquipment:equipment, instructions:instructions.length?instructions:exerciseInstructions({...exercise,specificEquipment:equipment})};
+  return {...exercise, description:description || exerciseDescription(exercise), specificEquipment:equipment, instructions:instructions.length?instructions:exerciseInstructions({...exercise,specificEquipment:equipment}), cardioPlan:cardioPrescription(exercise)};
 }
 
 function exerciseSearchText(exercise) {
   const detailed = withExerciseDetails(exercise);
-  return [exercise.name,label(exercise.gear),label(exercise.pattern),...(exercise.muscles || []).map(label),detailed.specificEquipment,detailed.description,...detailed.instructions].join(" ");
+  const cardioText=detailed.cardioPlan?Object.values(detailed.cardioPlan).join(" "):"";
+  return [exercise.name,label(exercise.gear),label(exercise.pattern),...(exercise.muscles || []).map(label),detailed.specificEquipment,detailed.description,...detailed.instructions,cardioText].join(" ");
 }
 
 function normalizeSearchText(value) {
@@ -444,6 +506,7 @@ function render() {
   if (tab === "plans") renderPlans();
   if (tab === "library") renderLibrary();
   if (tab === "log") renderHistory();
+  if (tab === "progress") renderProgress();
   if (tab === "goals") renderGoals();
 }
 
@@ -599,7 +662,7 @@ function makePlan({goal, target, split, count, variation, gear, focus, weekdays 
       used.add(picked.id);
       use[picked.id] = (use[picked.id] || 0) + 1;
       const timed = pattern === "conditioning" || /plank|hold|wall sit/i.test(picked.name);
-      const minutes = /interval/i.test(picked.name) ? 20 : /long/i.test(picked.name) ? 35 : /easy|steady|zone 2|recovery/i.test(picked.name) ? 30 : target === "Improve endurance" ? 25 : 15;
+      const minutes = pattern === "conditioning" ? cardioDurationFor(picked) : 0;
       const reps = pattern === "conditioning" ? minutes : timed ? 30 : target === "Get stronger" ? 5 : target === "Build muscle" ? 10 : 10;
       items.push({id: uid(), exercise: picked, sets: pattern === "conditioning" ? 1 : timed ? 3 : target === "Improve endurance" ? 2 : target === "General fitness" ? 2 : 3, reps});
     });
@@ -672,10 +735,33 @@ function updateBuilderSchedule(form) {
     : `<strong>No available days from this date</strong><span>Mark training days on the calendar, or turn off calendar syncing to use a weekly schedule.</span>`;
 }
 
+function convertWeight(value,from,to) {
+  const amount=Number(value)||0;
+  if(from===to)return amount;
+  return from==="lb"&&to==="kg"?amount/2.2046226218:from==="kg"&&to==="lb"?amount*2.2046226218:amount;
+}
+
+function latestExerciseSession(exerciseId) {
+  for(const workout of [...data.history].sort((a,b)=>new Date(b.date)-new Date(a.date))){
+    const sets=(workout.sets||[]).filter(set=>set.exercise?.id===exerciseId);
+    if(sets.length)return {workout,sets};
+  }
+  return null;
+}
+
+function lastExerciseSummary(exerciseId) {
+  const session=latestExerciseSession(exerciseId);
+  if(!session)return "Not logged yet";
+  const set=session.sets.at(-1),date=new Date(session.workout.date).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  const amount=`${set.amount} ${set.unit}`;
+  const load=set.weight?` · ${set.weight} ${session.workout.weightUnit||data.weightUnit}`:"";
+  return `Last logged ${amount}${load} · ${date}`;
+}
+
 function previewPlan(plan, draft) {
   const cardioNote = plan.includeCardio && plan.split !== "Cardio" ? " · cardio included on strength days" : "";
   const schedule = plan.calendarStart ? "Sessions follow your availability calendar in order." : `Repeats weekly on ${scheduleLabel(plan.days)}.`;
-  showModal("Plan preview", `<p class="subtle">${escapeHTML(plan.goal)} · ${escapeHTML(plan.target)} · ${escapeHTML(plan.split)}${cardioNote}</p><p class="subtle">${escapeHTML(schedule)}</p>${plan.days.map(day => `<div class="card"><div class="row"><strong>${escapeHTML(day.name)}</strong><span class="badge">${escapeHTML(day.scheduledDate ? displayDate(day.scheduledDate) : day.weekday)}</span></div>${day.items.map(item=>`<div class="exercise-row"><div><div class="exercise-title">${escapeHTML(item.exercise.name)}</div><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div></div></div>`).join("")}</div>`).join("")}<div class="modal-actions"><button class="button soft" data-action="edit-preview">Back</button><button class="button primary" data-action="save-preview">Save plan</button></div>`, {plan});
+  showModal("Plan preview", `<p class="subtle">${escapeHTML(plan.goal)} · ${escapeHTML(plan.target)} · ${escapeHTML(plan.split)}${cardioNote}</p><p class="subtle">${escapeHTML(schedule)}</p>${plan.days.map(day => `<div class="card"><div class="row"><strong>${escapeHTML(day.name)}</strong><span class="badge">${escapeHTML(day.scheduledDate ? displayDate(day.scheduledDate) : day.weekday)}</span></div>${day.items.map(item=>`<div class="exercise-row"><div><div class="exercise-title">${escapeHTML(item.exercise.name)}</div><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div>${item.exercise.pattern==="conditioning"?cardioPrescriptionMarkup(item.exercise,item.reps,true):""}</div></div>`).join("")}</div>`).join("")}<div class="modal-actions"><button class="button soft" data-action="edit-preview">Back</button><button class="button primary" data-action="save-preview">Save plan</button></div>`, {plan});
   modal._builderDraft = draft;
 }
 
@@ -689,9 +775,9 @@ function renderPlanDetail(plan) {
   app.innerHTML = `<button class="text-button" data-action="back-plans">‹ All plans</button>${heading(plan.goal, `${plan.target} · ${plan.split} · ${sessions}${follows ? " in rotation" : " per week"}${cardioNote}`)}
     <div class="card"><div class="row"><div><span class="eyebrow">${follows ? "Follows your calendar" : "Repeats every week"}</span><p class="subtle" style="margin:6px 0 0">${escapeHTML(schedule)}</p></div><button class="button small soft" data-action="edit-schedule">Edit days</button></div></div>
     <div class="card"><span class="eyebrow">Recovery option</span><h2 class="section-title" style="margin:6px 0">Missed a workout?</h2><p class="subtle">Choose the session you missed and how many sessions you can still fit in. The new schedule skips that session and keeps your original plan.</p><button class="button soft" data-action="missed">Adjust this week</button></div>
-    ${plan.days.map((day, index)=>`<section class="card"><div class="row"><div><span class="badge">${escapeHTML(dates[index] ? displayDate(dates[index]) : follows ? "Unscheduled" : day.weekday || "Unscheduled")}</span><p class="eyebrow" style="margin:8px 0 0">${escapeHTML(day.name)}</p><p class="subtle">${day.items.length} exercises</p></div><button class="button small primary" data-log-day="${escapeHTML(day.id)}">Log session</button></div>
+    ${plan.days.map((day, index)=>`<section class="card"><div class="row"><div><span class="badge">${escapeHTML(dates[index] ? displayDate(dates[index]) : follows ? "Unscheduled" : day.weekday || "Unscheduled")}</span><p class="eyebrow" style="margin:8px 0 0">${escapeHTML(day.name)}</p><p class="subtle">${day.items.length} exercises</p></div><button class="button small primary" data-log-day="${escapeHTML(day.id)}" data-plan-id="${escapeHTML(plan.id)}" data-scheduled-for="${escapeHTML(dates[index]||"")}">Log session</button></div>
       ${muscleMap(day.items.map(item=>item.exercise),day)}
-      ${day.items.map(item=>`<div class="day-exercise"><div class="row"><div><div class="exercise-title">${escapeHTML(item.exercise.name)}</div><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div></div><button class="text-button" data-swap="${escapeHTML(item.id)}" data-day="${escapeHTML(day.id)}">Swap</button></div><div class="row" style="justify-content:flex-start;margin-top:8px"><span class="subtle">Sets</span>${stepper(item.sets,`sets:${day.id}:${item.id}`)}<span class="subtle">Reps / min</span>${stepper(item.reps,`reps:${day.id}:${item.id}`)}</div></div>`).join("")}
+      ${day.items.map(item=>`<div class="day-exercise"><div class="row"><div class="day-exercise-copy"><button type="button" class="exercise-title-button" data-view-exercise="${escapeHTML(item.exercise.id)}" aria-label="View ${escapeHTML(item.exercise.name)} profile">${escapeHTML(item.exercise.name)}</button><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div><div class="subtle day-exercise-last">${escapeHTML(lastExerciseSummary(item.exercise.id))}</div></div><button class="text-button" data-swap="${escapeHTML(item.id)}" data-day="${escapeHTML(day.id)}">Swap</button></div>${item.exercise.pattern==="conditioning"?cardioPrescriptionMarkup(item.exercise,item.reps,true):""}<div class="row plan-set-controls" style="justify-content:flex-start;margin-top:8px"><span class="subtle">Sets</span>${stepper(item.sets,`sets:${day.id}:${item.id}`)}<span class="subtle">${item.exercise.pattern === "conditioning" ? "Minutes" : /plank|hold|wall sit/i.test(item.exercise.name) ? "Seconds" : "Reps"}</span>${stepper(item.reps,`reps:${day.id}:${item.id}`)}</div></div>`).join("")}
       <button class="text-button" data-add-exercise="${escapeHTML(day.id)}">＋ Add exercise</button></section>`).join("")}
     <button class="button danger full" data-action="delete-plan">Delete this plan</button>`;
 }
@@ -826,6 +912,7 @@ function openExerciseProfile(exercise,context=null) {
     <section class="exercise-profile-card"><span class="eyebrow">Quick info</span><p class="exercise-meta">${escapeHTML(exerciseSummary(selected))}</p></section>
     <section class="exercise-profile-card"><strong>Specific equipment</strong><p>${escapeHTML(details.specificEquipment)}</p></section>
     <section><h3 class="section-title">How to do it</h3><ol class="exercise-instructions">${details.instructions.map(step=>`<li>${escapeHTML(step)}</li>`).join("")}</ol><p class="exercise-safety">Start with a light load or easy pace while learning the movement. Keep each rep controlled and stop if you feel sharp pain or dizziness.</p></section>
+    ${details.cardioPlan?cardioPrescriptionMarkup(selected,cardioDurationFor(selected)):""}
     <section><h3 class="section-title">Muscles worked</h3>${muscleMap([selected])}</section>
     <div class="modal-actions">${actions}</div>
   </div>`);
@@ -850,21 +937,163 @@ function openExerciseEditor(exercise = {id:"",name:"",pattern:"push",gear:"bodyw
 
 function renderHistory() {
   const history = [...data.history].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  app.innerHTML = `${heading("Workout log", "Keep the sessions you complete in one place.")}<button class="button primary" data-action="new-workout">＋ Log a workout</button><h2 class="section-title">Recent sessions</h2>${history.length ? history.map(workout=>`<section class="card"><div class="row"><div><strong>${escapeHTML(workout.name)}</strong><div class="subtle">${new Date(workout.date).toLocaleDateString()} · ${workout.sets.length} sets</div></div><span class="badge">${escapeHTML(workout.weightUnit)}</span></div>${muscleMap(workout.sets.map(set=>set.exercise),workout)}${workout.sets.map(set=>`<div class="exercise-row"><div><div class="exercise-title">${escapeHTML(set.exercise.name)}</div><div class="exercise-meta">${set.amount} ${escapeHTML(set.unit)}${set.weight ? ` · ${set.weight} ${escapeHTML(workout.weightUnit)}` : ""}</div></div></div>`).join("")}</section>`).join("") : `<div class="card empty"><b>No workouts yet</b>Log your first session from a plan or here.</div>`}`;
+  app.innerHTML = `${heading("Workout log", "Keep the sessions you complete in one place.")}<button class="button primary" data-action="new-workout">＋ Log a workout</button><h2 class="section-title">Recent sessions</h2>${history.length ? history.map(workout=>historyCard(workout,true)).join("") : `<div class="card empty"><b>No workouts yet</b>Log your first session from a plan or here.</div>`}`;
 }
 
-function openWorkoutEditor(day = null) {
-  logDraft = day ? day.items.flatMap(item=>Array.from({length:item.sets},()=>({exercise:item.exercise,amount:item.reps,weight:0,unit:item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps",done:false}))) : [];
+function workoutDateKey(workout) {
+  const date=new Date(workout?.date||"");
+  return Number.isNaN(date.getTime())?null:dateKey(date);
+}
+
+function historyCard(workout,includeMap=false) {
+  const sets=Array.isArray(workout.sets)?workout.sets:[];
+  const date=workoutDateKey(workout);
+  const cardioMinutes=sets.filter(set=>set.unit==="min").reduce((sum,set)=>sum+(Number(set.amount)||0),0);
+  return `<section class="card history-card"><div class="row"><div><strong>${escapeHTML(workout.name||"Workout")}</strong><div class="subtle">${date?escapeHTML(parseDateKey(date).toLocaleDateString()):"Date unknown"} · ${sets.length} sets${workout.planId?" · saved plan":""}${cardioMinutes?` · ${cardioMinutes} cardio min`:""}</div></div><span class="badge">${escapeHTML(workout.weightUnit||data.weightUnit)}</span></div>${includeMap&&sets.length?muscleMap(sets.map(set=>set.exercise).filter(Boolean),workout):""}${sets.map(set=>{
+    const exercise=set.exercise||{};
+    const amount=`${Number(set.amount)||0} ${escapeHTML(set.unit||"reps")}`;
+    const weight=set.weight?` · ${set.weight} ${escapeHTML(workout.weightUnit||data.weightUnit)}`:"";
+    const cardio=set.cardioLog?`<span class="subtle history-cardio-meta">${[set.cardioLog.distance?`${set.cardioLog.distance} ${set.cardioLog.distanceUnit||"mi"}`:"",set.cardioLog.setting,set.cardioLog.rpe?`RPE ${set.cardioLog.rpe}`:""].filter(Boolean).map(escapeHTML).join(" · ")}</span>`:"";
+    return `<button type="button" class="history-exercise-button" data-view-exercise="${escapeHTML(exercise.id||"")}" aria-label="View ${escapeHTML(exercise.name||"exercise")} profile"><span><strong>${escapeHTML(exercise.name||"Exercise")}</strong><span class="exercise-meta">${amount}${weight}</span>${cardio}</span><span class="exercise-row-cue">Details</span></button>`;
+  }).join("")}</section>`;
+}
+
+function planStartDate(plan,today) {
+  if(plan.createdAt){const created=String(plan.createdAt).slice(0,10);if(validDateKey(created))return created;}
+  const dayNames=new Set(plan.days.map(day=>day.name));
+  const legacyDates=data.history.filter(workout=>!workout.planId&&dayNames.has(workout.name)).map(workoutDateKey).filter(Boolean).sort();
+  return legacyDates[0]||today;
+}
+
+function plannedOccurrences(start,end) {
+  const occurrences=[];
+  for(const plan of data.plans){
+    if(!plan.days?.length)continue;
+    const activeFrom=planStartDate(plan,end);
+    const first=[start,activeFrom,plan.calendarStart||start].sort().at(-1);
+    for(let date=first;date<=end;date=addDays(date,1)){
+      let day=null;
+      if(plan.calendarStart){
+        if(date<plan.calendarStart||!isAvailable(date))continue;
+        const offset=availableDateCount(plan.calendarStart,date);
+        day=plan.days[((plan.calendarOffset||0)+offset)%plan.days.length];
+      } else {
+        day=plan.days.find(item=>item.weekday===weekdayForDate(date));
+      }
+      if(day)occurrences.push({date,plan,day});
+    }
+  }
+  return occurrences;
+}
+
+function occurrenceHistoryMatch(occurrence,claimed) {
+  const ids=new Set(occurrence.day.items.map(item=>item.exercise.id));
+  const candidates=data.history.filter(workout=>{
+    if(claimed.has(workout))return false;
+    const date=workout.scheduledFor||workoutDateKey(workout);
+    if(date!==occurrence.date)return false;
+    if(workout.planId)return workout.planId===occurrence.plan.id&&workout.planDayId===occurrence.day.id;
+    return (workout.sets||[]).some(set=>ids.has(set.exercise?.id));
+  });
+  return candidates[0]||null;
+}
+
+function progressMetrics() {
+  const today=dateKey(new Date()),start=addDays(today,-29),workouts=data.history.filter(workout=>workoutDateKey(workout)>=start&&workoutDateKey(workout)<=today);
+  const occurrences=plannedOccurrences(start,today);
+  const claimed=new Set();
+  let completed=0,planned=0;
+  for(const occurrence of occurrences){
+    const match=occurrenceHistoryMatch(occurrence,claimed);
+    if(occurrence.date===today&&!match)continue;
+    planned++;
+    if(match){completed++;claimed.add(match);}
+  }
+  const cardioMinutes=workouts.reduce((sum,workout)=>sum+(workout.sets||[]).filter(set=>set.unit==="min").reduce((total,set)=>total+(Number(set.amount)||0),0),0);
+  const volume=workouts.reduce((sum,workout)=>sum+(workout.sets||[]).filter(set=>set.unit==="reps"&&set.weight>0).reduce((total,set)=>total+(Number(set.amount)||0)*convertWeight(set.weight,workout.weightUnit||data.weightUnit,data.weightUnit),0),0);
+  return {workouts,cardioMinutes,volume,planned,completed,missed:Math.max(0,planned-completed)};
+}
+
+function weightedExercises() {
+  const byId=new Map();
+  for(const workout of data.history)for(const set of workout.sets||[]){
+    if(set.unit!=="reps"||!(Number(set.weight)>0)||!set.exercise?.id)continue;
+    byId.set(set.exercise.id,data.library.find(item=>item.id===set.exercise.id)||set.exercise);
+  }
+  return [...byId.values()].sort((a,b)=>a.name.localeCompare(b.name));
+}
+
+function weightChart(exercise) {
+  const points=[];
+  for(const workout of data.history)for(const set of workout.sets||[]){
+    if(set.exercise?.id!==exercise.id||set.unit!=="reps"||!(Number(set.weight)>0))continue;
+    const date=workoutDateKey(workout);if(!date)continue;
+    points.push({date,weight:convertWeight(set.weight,workout.weightUnit||data.weightUnit,data.weightUnit)});
+  }
+  const byDate=new Map();
+  for(const point of points){byDate.set(point.date,Math.max(byDate.get(point.date)||0,point.weight));}
+  const series=[...byDate].map(([date,weight])=>({date,weight})).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!series.length)return `<div class="card empty chart-empty"><b>No weight history for ${escapeHTML(exercise.name)}</b>Log a completed set with a weight from a saved plan or the workout log to start this graph.</div>`;
+  const width=640,height=245,pad={left:48,right:18,top:22,bottom:43},plotW=width-pad.left-pad.right,plotH=height-pad.top-pad.bottom;
+  const max=Math.max(...series.map(point=>point.weight)),top=Math.max(1,Math.ceil(max/5)*5);
+  const first=dayNumber(series[0].date),last=dayNumber(series.at(-1).date),span=Math.max(1,last-first);
+  const coords=series.map(point=>({x:pad.left+(dayNumber(point.date)-first)/span*plotW,y:pad.top+(1-point.weight/top)*plotH,...point}));
+  const path=coords.map((point,index)=>`${index?"L":"M"}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+  const yTicks=[0,.5,1].map(ratio=>{const y=pad.top+(1-ratio)*plotH,value=top*ratio;return `<line class="chart-gridline" x1="${pad.left}" y1="${y}" x2="${width-pad.right}" y2="${y}"/><text class="chart-axis-label" x="${pad.left-8}" y="${y+4}" text-anchor="end">${value.toFixed(value%1?1:0)}</text>`;}).join("");
+  const labelIndexes=[...new Set([0,Math.floor((coords.length-1)/2),coords.length-1])];
+  const xLabels=labelIndexes.map(index=>{const point=coords[index];const text=parseDateKey(point.date).toLocaleDateString(undefined,{month:"short",day:"numeric"});return `<text class="chart-axis-label" x="${point.x}" y="${height-12}" text-anchor="middle">${escapeHTML(text)}</text>`;}).join("");
+  const dots=coords.map(point=>`<circle class="chart-dot" cx="${point.x}" cy="${point.y}" r="5"><title>${escapeHTML(displayDate(point.date))}: ${point.weight.toFixed(1)} ${escapeHTML(data.weightUnit)}</title></circle>`).join("");
+  return `<svg class="weight-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Heaviest completed set for ${escapeHTML(exercise.name)} over time, in ${escapeHTML(data.weightUnit)}">${yTicks}<path class="chart-line" d="${path}"/>${dots}${xLabels}</svg><p class="subtle chart-note">Highest completed set weight per workout · ${escapeHTML(data.weightUnit)}. Weights are converted to your current unit.</p>`;
+}
+
+function progressHistoryItem(workout) {
+  const date=workoutDateKey(workout),sets=workout.sets||[];
+  return `<section class="card progress-history-card"><div class="row"><div><strong>${escapeHTML(workout.name||"Workout")}</strong><div class="subtle">${date?escapeHTML(parseDateKey(date).toLocaleDateString()):"Date unknown"} · ${sets.length} logged sets${workout.planId?" · saved plan":""}</div></div><span class="badge">${escapeHTML(workout.weightUnit||data.weightUnit)}</span></div><div class="progress-history-list">${sets.map(set=>`<button type="button" class="history-exercise-button" data-view-exercise="${escapeHTML(set.exercise?.id||"")}" aria-label="View ${escapeHTML(set.exercise?.name||"exercise")} profile"><span><strong>${escapeHTML(set.exercise?.name||"Exercise")}</strong><span class="exercise-meta">${Number(set.amount)||0} ${escapeHTML(set.unit||"reps")}${set.weight?` · ${set.weight} ${escapeHTML(workout.weightUnit||data.weightUnit)}`:""}${set.cardioLog?.setting?` · ${escapeHTML(set.cardioLog.setting)}`:""}${set.cardioLog?.rpe?` · RPE ${escapeHTML(set.cardioLog.rpe)}`:""}</span></span><span class="exercise-row-cue">Details</span></button>`).join("")}</div></section>`;
+}
+
+function renderProgress() {
+  const metrics=progressMetrics(),exercises=weightedExercises();
+  if(!exercises.some(exercise=>exercise.id===progressExerciseId))progressExerciseId=exercises[0]?.id||"";
+  const selected=exercises.find(exercise=>exercise.id===progressExerciseId);
+  const adherence=metrics.planned?Math.round(metrics.completed/metrics.planned*100):null;
+  const missedRate=metrics.planned?Math.round(metrics.missed/metrics.planned*100):null;
+  const history=[...data.history].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  app.innerHTML=`${heading("Progress", "See your training consistency, cardio work, and strength trends over the last 30 days.")}
+    <section class="metric-grid" aria-label="Training metrics for the last 30 days">
+      <article class="card metric-card"><span class="eyebrow">Sessions logged</span><strong>${metrics.workouts.length}</strong><span class="subtle">Last 30 days</span></article>
+      <article class="card metric-card"><span class="eyebrow">Sessions done</span><strong>${adherence===null?"—":`${adherence}%`}</strong><span class="subtle">${missedRate===null?"Save a plan to track missed sessions":`${missedRate}% missed · ${metrics.completed} done of ${metrics.planned} scheduled`}</span></article>
+      <article class="card metric-card"><span class="eyebrow">Cardio time</span><strong>${metrics.cardioMinutes} min</strong><span class="subtle">Logged cardio sessions</span></article>
+      <article class="card metric-card"><span class="eyebrow">Weighted volume</span><strong>${Math.round(metrics.volume).toLocaleString()} ${escapeHTML(data.weightUnit)}</strong><span class="subtle">Load × reps · logged sets</span></article>
+    </section>
+    <section class="card progress-chart-card"><div class="row"><div><h2 class="section-title">Weight over time</h2><p class="subtle">Track the heaviest completed set for one exercise at a time.</p></div>${exercises.length?`<label class="chart-select-label">Exercise<select id="progress-exercise">${exercises.map(exercise=>`<option value="${escapeHTML(exercise.id)}" ${exercise.id===progressExerciseId?"selected":""}>${escapeHTML(exercise.name)}</option>`).join("")}</select></label>`:""}</div>${selected?weightChart(selected):`<div class="card empty chart-empty"><b>No weighted sets logged yet</b>Log weights on completed sets from your saved plans to build an exercise graph.</div>`}</section>
+    <div class="row progress-history-heading"><h2 class="section-title">Workout history</h2><span class="subtle">${history.length} total</span></div>
+    ${history.length?history.map(progressHistoryItem).join(""):`<div class="card empty"><b>No past workouts yet</b>Complete a session and it will appear here with its progress data.</div>`}`;
+}
+
+function openWorkoutEditor(day = null, plan = null, scheduledFor = null) {
+  workoutContext=day&&plan?{planId:plan.id,planDayId:day.id,scheduledFor:scheduledFor||null}:null;
+  workoutWeightUnit=data.weightUnit;
+  logDraft = day ? day.items.flatMap(item=>{
+    const unit=item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps";
+    const previous=unit==="reps"?latestExerciseSession(item.exercise.id):null;
+    const priorSets=previous?.sets.filter(set=>set.unit==="reps")||[];
+    return Array.from({length:item.sets},(_,index)=>{
+      const prior=priorSets[index]||priorSets.at(-1);
+      const suggestedWeight=prior?.weight?convertWeight(prior.weight,previous.workout.weightUnit||data.weightUnit,data.weightUnit):0;
+      return {exercise:item.exercise,amount:item.reps,weight:suggestedWeight,unit,done:false,fromPrevious:Boolean(suggestedWeight),cardioLog:unit==="min"?{distance:"",distanceUnit:"mi",setting:"",rpe:""}:null};
+    });
+  }) : [];
   renderWorkoutEditor(day?.name || "Workout");
 }
 
 function renderWorkoutEditor(name) {
   const lines = logDraft.map((set, index) => {
-    const weightField = set.unit === "reps"      ? '<div class="set-weight-control"><label class="set-weight-label" data-set-number="'+(index+1)+'" for="log-weight-'+index+'">Weight for set '+(index+1)+' ('+data.weightUnit+')</label><input id="log-weight-slider-'+index+'" type="range" min="0" max="'+(data.weightUnit === "kg" ? 300 : 600)+'" step="0.5" data-log-weight-slider="'+index+'" value="'+(set.weight || 0)+'" aria-label="Weight slider for set '+(index+1)+'"><input id="log-weight-'+index+'" inputmode="decimal" type="number" min="0" step="0.5" data-log-weight="'+index+'" value="'+(set.weight || "")+'" placeholder="0" aria-label="Weight for set '+(index+1)+'"></div>'
-      : `<span></span>`;
-    return `<div class="log-set"><label><input style="width:18px;min-width:18px;height:18px;min-height:18px;margin:0;padding:0;flex:0 0 18px;appearance:auto;accent-color:var(--red)" type="checkbox" data-log-done="${index}" ${set.done ? "checked" : ""}><span style="text-align:left">${escapeHTML(set.exercise.name)}</span></label><input inputmode="numeric" type="number" min="1" data-log-amount="${index}" value="${set.amount}" aria-label="${escapeHTML(set.unit)}">${weightField}<button class="text-button" type="button" data-remove-log="${index}" aria-label="Remove">×</button></div>`;
+    const weightField = set.unit === "reps" ? `<div class="set-weight-control"><label class="set-weight-label" for="log-weight-${index}">Weight for set ${index+1} (${workoutWeightUnit})</label><input id="log-weight-slider-${index}" type="range" min="0" max="${workoutWeightUnit === "kg" ? 300 : 600}" step="0.5" data-log-weight-slider="${index}" value="${set.weight || 0}" aria-label="Weight slider for set ${index+1}"><input id="log-weight-${index}" inputmode="decimal" type="number" min="0" step="0.5" data-log-weight="${index}" value="${set.weight || ""}" placeholder="0" aria-label="Weight for set ${index+1}">${set.fromPrevious?`<span class="subtle previous-weight-note">Prefilled from your last ${escapeHTML(set.exercise.name)} log</span>`:""}</div>` : "";
+    const cardioLog=set.unit==="min"?`<div class="cardio-log-fields"><div class="grid2"><label>Distance<input type="number" min="0" step="0.1" data-log-cardio="${index}" data-cardio-field="distance" value="${escapeHTML(set.cardioLog?.distance||"")}" placeholder="Optional"></label><label>Unit<select data-log-cardio="${index}" data-cardio-field="distanceUnit"><option ${set.cardioLog?.distanceUnit==="mi"?"selected":""}>mi</option><option ${set.cardioLog?.distanceUnit==="km"?"selected":""}>km</option></select></label></div><label>Resistance, incline, or intervals used<input type="text" data-log-cardio="${index}" data-cardio-field="setting" value="${escapeHTML(set.cardioLog?.setting||"")}" placeholder="e.g. Level 5; 1 min hard / 1 min easy"></label><label>Effort (RPE 1–10)<select data-log-cardio="${index}" data-cardio-field="rpe"><option value="">Not recorded</option>${Array.from({length:10},(_,n)=>n+1).map(value=>`<option value="${value}" ${String(set.cardioLog?.rpe||"")===String(value)?"selected":""}>${value}</option>`).join("")}</select></label></div>`:"";
+    return `<div class="log-set"><label><input style="width:18px;min-width:18px;height:18px;min-height:18px;margin:0;padding:0;flex:0 0 18px;appearance:auto;accent-color:var(--red)" type="checkbox" data-log-done="${index}" ${set.done ? "checked" : ""}><span style="text-align:left">${escapeHTML(set.exercise.name)}</span></label><input inputmode="numeric" type="number" min="1" data-log-amount="${index}" value="${set.amount}" aria-label="${set.unit === "min" ? "Duration minutes" : set.unit}">${weightField}${cardioLog}<button class="text-button" type="button" data-remove-log="${index}" aria-label="Remove">×</button></div>`;
   }).join("");
-  showModal("Log workout", `<form id="workout-form"><div class="field"><label>Workout name</label><input name="name" value="${escapeHTML(name)}" required></div><div class="grid2"><div class="field"><label>Weight unit</label><select name="weightUnit"><option ${data.weightUnit === "lb" ? "selected" : ""}>lb</option><option ${data.weightUnit === "kg" ? "selected" : ""}>kg</option></select></div><div class="field"><label>Add an exercise</label><select name="add-exercise"><option value="">Choose exercise</option>${data.library.map(exercise => `<option value="${escapeHTML(exercise.id)}">${escapeHTML(exercise.name)}</option>`).join("")}</select></div></div><div class="row"><span class="field-label">Completed sets</span><button class="button soft small" type="button" data-action="append-set">Add sets</button></div><div>${lines || `<p class="subtle">Choose an exercise, then add its sets.</p>`}</div><div class="modal-actions"><button class="button soft" type="button" data-close>Cancel</button><button class="button primary">Save workout</button></div></form>`);
+  const planNote=workoutContext?`<p class="subtle">This session will be saved to its plan and included in your workout progress.</p>`:"";
+  showModal("Log workout", `<form id="workout-form"><div class="field"><label>Workout name</label><input name="name" value="${escapeHTML(name)}" required></div>${planNote}<div class="grid2"><div class="field"><label>Weight unit</label><select name="weightUnit"><option ${workoutWeightUnit === "lb" ? "selected" : ""}>lb</option><option ${workoutWeightUnit === "kg" ? "selected" : ""}>kg</option></select></div><div class="field"><label>Add an exercise</label><select name="add-exercise"><option value="">Choose exercise</option>${data.library.map(exercise => `<option value="${escapeHTML(exercise.id)}">${escapeHTML(exercise.name)}</option>`).join("")}</select></div></div><div class="row"><span class="field-label">Completed sets and cardio metrics</span><button class="button soft small" type="button" data-action="append-set">Add sets</button></div><div>${lines || `<p class="subtle">Choose an exercise, then add its sets.</p>`}</div><div class="modal-actions"><button class="button soft" type="button" data-close>Cancel</button><button class="button primary">Save workout</button></div></form>`);
 }
 function renderGoals() {
   app.innerHTML = `${heading("Goals", "Set a measurable target and update your progress as you go.")}<button class="button primary" data-action="new-goal">＋ Add a goal</button><h2 class="section-title">Your targets</h2>${data.goals.length ? data.goals.map(goal=>{const progress=Math.max(0,Math.min(1,goal.current/goal.target));return `<section class="card"><div class="row"><strong>${escapeHTML(goal.name)}</strong><button class="text-button" data-edit-goal="${escapeHTML(goal.id)}">Update</button></div><div class="progress"><span style="width:${progress*100}%"></span></div><div class="row subtle"><span>${escapeHTML(goal.current)} / ${escapeHTML(goal.target)} ${escapeHTML(goal.unit)}</span><button class="text-button" data-delete-goal="${escapeHTML(goal.id)}">Remove</button></div></section>`}).join("") : `<div class="card empty"><b>No goals set</b>Add a target you can measure.</div>`}`;
@@ -885,7 +1114,7 @@ function showModal(title, content, options = {}) {
   modal._exerciseContext = null;
 }
 
-function closeModal() { modal.hidden = true; modal.innerHTML = ""; modal._previewPlan = null; modal._exerciseContext = null; delete modal.dataset.pickerDay; delete modal.dataset.pickerSwap; delete modal.dataset.pickerQuery; }
+function closeModal() { modal.hidden = true; modal.innerHTML = ""; modal._previewPlan = null; modal._exerciseContext = null; workoutContext=null; delete modal.dataset.pickerDay; delete modal.dataset.pickerSwap; delete modal.dataset.pickerQuery; }
 
 function openMissedDay() {
   const plan = getPlan(openPlanId);
@@ -935,8 +1164,8 @@ function chooseExerciseForPlan(exercise,dayId,swapId) {
   if(!day||!exercise)return;
   if(swapId){
     const item=day.items.find(entry=>entry.id===swapId);
-    if(item){item.exercise=exercise;item.reps=exercise.pattern==="conditioning"?20:item.reps;item.sets=exercise.pattern==="conditioning"?1:item.sets;}
-  } else day.items.push({id:uid(),exercise,sets:exercise.pattern==="conditioning"?1:3,reps:exercise.pattern==="conditioning"?20:10});
+    if(item){item.exercise=exercise;item.reps=exercise.pattern==="conditioning"?cardioDurationFor(exercise):item.reps;item.sets=exercise.pattern==="conditioning"?1:item.sets;}
+  } else day.items.push({id:uid(),exercise,sets:exercise.pattern==="conditioning"?1:3,reps:exercise.pattern==="conditioning"?cardioDurationFor(exercise):10});
   closeModal();saveAndRender("Workout updated.");
 }
 
@@ -1018,10 +1247,10 @@ document.addEventListener("click", event => {
   if (button.dataset.action === "new-workout") openWorkoutEditor();
   if (button.dataset.action === "export-backup") exportBackup();
   if (button.dataset.action === "import-backup") { closeModal(); document.querySelector("#restore-file").click(); }
-  if (button.dataset.action === "save-preview" && modal._previewPlan) { data.plans.unshift(modal._previewPlan); closeModal(); saveAndRender("Plan saved."); }
+  if (button.dataset.action === "save-preview" && modal._previewPlan) { modal._previewPlan.createdAt=new Date().toISOString(); data.plans.unshift(modal._previewPlan); closeModal(); saveAndRender("Plan saved."); }
   if (button.dataset.action === "edit-preview") openBuilder(modal._builderDraft);
   if (button.dataset.action === "delete-plan" && openPlanId) { if (confirm("Delete this plan?")) { data.plans=data.plans.filter(plan=>plan.id!==openPlanId); openPlanId=null; saveAndRender("Plan deleted."); } }
-  if (button.dataset.logDay) { const plan=getPlan(openPlanId); const day=plan?.days.find(item=>item.id===button.dataset.logDay); if(day) openWorkoutEditor(day); }
+  if (button.dataset.logDay) { const plan=getPlan(button.dataset.planId||openPlanId); const day=plan?.days.find(item=>item.id===button.dataset.logDay); if(day) openWorkoutEditor(day,plan,button.dataset.scheduledFor||null); }
   if (button.dataset.addExercise) openExercisePicker(button.dataset.addExercise);
   if (button.dataset.swap) openExercisePicker(button.dataset.day,button.dataset.swap);
   if (button.dataset.editExercise) openExerciseEditor(data.library.find(item=>item.id===button.dataset.editExercise),modal._exerciseContext);
@@ -1039,7 +1268,7 @@ document.addEventListener("click", event => {
     const exercise=data.library.find(item=>item.id===selected);
     if(!exercise){toast("Choose an exercise first.");return;}
     const unit=exercise.pattern==="conditioning"?"min":/plank|hold|wall sit/i.test(exercise.name)?"sec":"reps";
-    logDraft.push({exercise,amount:unit==="min"?20:unit==="sec"?30:10,weight:0,unit,done:false});renderWorkoutEditor(name);
+    logDraft.push({exercise,amount:unit==="min"?cardioDurationFor(exercise):unit==="sec"?30:10,weight:0,unit,done:false,cardioLog:unit==="min"?{distance:"",distanceUnit:"mi",setting:"",rpe:""}:null});renderWorkoutEditor(name);
   }
   if (button.dataset.pickExercise) {
     chooseExerciseForPlan(data.library.find(item=>item.id===button.dataset.pickExercise),modal.dataset.pickerDay,modal.dataset.pickerSwap);
@@ -1053,7 +1282,28 @@ document.addEventListener("input", event => {
   if (["availability-type", "availability-duration", "availability-start", "cycle-length"].includes(event.target.id)) updateAvailabilityEditor(event.target.form);
   if (event.target.id === "plan-schedule-type") updateScheduleEditor(event.target.form);
   if(event.target.dataset.logDone!==undefined) logDraft[Number(event.target.dataset.logDone)].done=event.target.checked;
-  if(event.target.dataset.logAmount!==undefined) logDraft[Number(event.target.dataset.logAmount)].amount=Number(event.target.value)||0;  if(event.target.dataset.logWeight!==undefined||event.target.dataset.logWeightSlider!==undefined){const index=Number(event.target.dataset.logWeight??event.target.dataset.logWeightSlider),weight=Math.max(0,Number(event.target.value)||0),number=document.querySelector('[data-log-weight="'+index+'"]'),slider=document.querySelector('[data-log-weight-slider="'+index+'"]');logDraft[index].weight=weight;if(number&&number!==event.target)number.value=weight?String(weight):"";if(slider&&slider!==event.target){if(weight>Number(slider.max))slider.max=String(Math.ceil(weight/50)*50);slider.value=String(weight)}}
+  if(event.target.dataset.logAmount!==undefined) logDraft[Number(event.target.dataset.logAmount)].amount=Number(event.target.value)||0;
+  if(event.target.dataset.logCardio!==undefined){const set=logDraft[Number(event.target.dataset.logCardio)];set.cardioLog||={distance:"",distanceUnit:"mi",setting:"",rpe:""};set.cardioLog[event.target.dataset.cardioField]=event.target.value;}
+  if(event.target.dataset.logWeight!==undefined||event.target.dataset.logWeightSlider!==undefined){const index=Number(event.target.dataset.logWeight??event.target.dataset.logWeightSlider),weight=Math.max(0,Number(event.target.value)||0),number=document.querySelector('[data-log-weight="'+index+'"]'),slider=document.querySelector('[data-log-weight-slider="'+index+'"]');logDraft[index].weight=weight;if(number&&number!==event.target)number.value=weight?String(weight):"";if(slider&&slider!==event.target){if(weight>Number(slider.max))slider.max=String(Math.ceil(weight/50)*50);slider.value=String(weight)}}
+});
+
+document.addEventListener("change",event=>{
+  if(event.target.id==="progress-exercise"){progressExerciseId=event.target.value;renderProgress();}
+  if(event.target.form?.id==="workout-form"&&event.target.name==="weightUnit"){
+    const next=event.target.value,previous=workoutWeightUnit;
+    if(next!==previous){
+      logDraft.forEach((set,index)=>{
+        if(set.unit!=="reps")return;
+        set.weight=Number(convertWeight(set.weight,previous,next).toFixed(1));
+        const number=document.querySelector(`[data-log-weight="${index}"]`),slider=document.querySelector(`[data-log-weight-slider="${index}"]`),labelNode=document.querySelector(`label[for="log-weight-${index}"]`);
+        if(number)number.value=set.weight?String(Number(set.weight.toFixed(1))):"";
+        if(slider){slider.max=String(Math.max(next==="kg"?300:600,Math.ceil(set.weight/50)*50));slider.value=String(set.weight||0);}
+        if(labelNode)labelNode.textContent=`Weight for set ${index+1} (${next})`;
+      });
+      workoutWeightUnit=next;
+    }
+  }
+  if(event.target.dataset.logCardio!==undefined){const set=logDraft[Number(event.target.dataset.logCardio)];set.cardioLog||={distance:"",distanceUnit:"mi",setting:"",rpe:""};set.cardioLog[event.target.dataset.cardioField]=event.target.value;}
 });
 
 document.addEventListener("submit", event => {
@@ -1104,6 +1354,7 @@ document.addEventListener("submit", event => {
     const gear=[...new Set(plan.days.flatMap(day=>day.items.map(item=>item.exercise.gear)))];
     const remaining=Number(values.get("remaining"));const orderedDays=[...plan.days.slice(missedIndex+1),...plan.days.slice(0,missedIndex)];const recoveryWeekdays=orderedDays.length>=remaining?orderedDays.slice(0,remaining).map(day=>day.weekday):defaultWeeklyDays(remaining);
     const recovery=makePlan({goal:`Back on track · ${plan.goal}`,target:plan.target,split:plan.split,count:remaining,variation:1,gear:gear.length?gear:["bodyweight"],focus:plan.focus,weekdays:recoveryWeekdays,includeCardio:plan.includeCardio,startIndex:missedIndex+1});
+    recovery.createdAt=new Date().toISOString();
     if (plan.calendarStart) {
       const today = dateKey(new Date());
       recovery.calendarStart = plan.calendarStart > today ? plan.calendarStart : today;
@@ -1141,9 +1392,12 @@ document.addEventListener("submit", event => {
     const index=data.goals.findIndex(item=>item.id===goal.id);if(index>=0)data.goals[index]=goal;else data.goals.push(goal);closeModal();saveAndRender("Goal saved.");
   }
   if(form.id==="workout-form"){
-    const completed=logDraft.filter(set=>set.done&&set.amount>0&&set.weight>=0).map(({exercise,amount,weight,unit})=>({exercise,amount,weight,unit}));
+    const completed=logDraft.filter(set=>set.done&&set.amount>0&&set.weight>=0).map(({exercise,amount,weight,unit,cardioLog})=>({exercise,amount,weight,unit,...(unit==="min"&&cardioLog?{cardioLog:{...cardioLog}}:{})}));
     if(!completed.length){toast("Check off at least one completed set.");return;}
-    data.weightUnit=values.get("weightUnit");data.history.push({id:uid(),name:String(values.get("name")).trim()||"Workout",date:new Date().toISOString(),sets:completed,weightUnit:data.weightUnit});closeModal();saveAndRender("Workout logged.");
+    data.weightUnit=values.get("weightUnit");
+    const workout={id:uid(),name:String(values.get("name")).trim()||"Workout",date:new Date().toISOString(),sets:completed,weightUnit:data.weightUnit};
+    if(workoutContext){workout.planId=workoutContext.planId;workout.planDayId=workoutContext.planDayId;if(workoutContext.scheduledFor)workout.scheduledFor=workoutContext.scheduledFor;}
+    data.history.push(workout);closeModal();saveAndRender("Workout logged.");
   }
 });
 
