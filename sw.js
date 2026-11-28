@@ -1,5 +1,5 @@
-const CACHE = "rep-atlas-v22";
-const FILES = ["./", "./index.html", "./app.css?v=22", "./app.js?v=22", "./muscle-map-reference.png?v=22", "./push.js/push.js", "./catalog.json", "./manifest.webmanifest", "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
+const CACHE = "rep-atlas-v23";
+const FILES = ["./", "./index.html", "./app.css?v=23", "./app.js?v=23", "./push.js/push.js", "./catalog.json", "./manifest.webmanifest", "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
   self.skipWaiting();

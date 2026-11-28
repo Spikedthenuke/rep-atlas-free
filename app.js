@@ -2,10 +2,10 @@ const app = document.querySelector("#app");
 const modal = document.querySelector("#modal");
 const storeKey = "rep-atlas-workout-data-v1";
 const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const muscles = ["chest", "shoulders", "biceps", "triceps", "forearms", "abs", "obliques", "traps", "lats", "lowerBack", "glutes", "quads", "hamstrings", "calves"];
+const muscles = ["chest", "shoulders", "biceps", "triceps", "forearms", "abs", "obliques", "serratus", "traps", "upperBack", "lats", "lowerBack", "glutes", "quads", "adductors", "hamstrings", "calves"];
 const gearOptions = ["bodyweight", "dumbbells", "barbell", "cable", "machine", "band", "kettlebell", "pullupBar", "cardio"];
 const gearNames = {bodyweight:"Bodyweight",dumbbells:"Dumbbells",barbell:"Barbell",cable:"Cable",machine:"Machine",band:"Band",kettlebell:"Kettlebell",pullupBar:"Pull-up bar",cardio:"Cardio machine"};
-const muscleNames = {lowerBack:"Lower back"};
+const muscleNames = {lowerBack:"Lower back",upperBack:"Upper back"};
 const patternNames = {push:"Push",pull:"Pull",squat:"Squat",hinge:"Hinge",core:"Core",conditioning:"Cardio"};
 const specificEquipmentById = {
   "machine-chest-press":"Seated chest-press machine, selectorized or plate-loaded",
@@ -666,7 +666,7 @@ function renderPlanDetail(plan) {
     <div class="card"><div class="row"><div><span class="eyebrow">${follows ? "Follows your calendar" : "Repeats every week"}</span><p class="subtle" style="margin:6px 0 0">${escapeHTML(schedule)}</p></div><button class="button small soft" data-action="edit-schedule">Edit days</button></div></div>
     <div class="card"><span class="eyebrow">Recovery option</span><h2 class="section-title" style="margin:6px 0">Missed a workout?</h2><p class="subtle">Choose the session you missed and how many sessions you can still fit in. The new schedule skips that session and keeps your original plan.</p><button class="button soft" data-action="missed">Adjust this week</button></div>
     ${plan.days.map((day, index)=>`<section class="card"><div class="row"><div><span class="badge">${escapeHTML(dates[index] ? displayDate(dates[index]) : follows ? "Unscheduled" : day.weekday || "Unscheduled")}</span><p class="eyebrow" style="margin:8px 0 0">${escapeHTML(day.name)}</p><p class="subtle">${day.items.length} exercises</p></div><button class="button small primary" data-log-day="${escapeHTML(day.id)}">Log session</button></div>
-      ${muscleMap(day.items.flatMap(item=>item.exercise.muscles))}
+      ${muscleMap(day.items.map(item=>item.exercise),day)}
       ${day.items.map(item=>`<div class="day-exercise"><div class="row"><div><div class="exercise-title">${escapeHTML(item.exercise.name)}</div><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div></div><button class="text-button" data-swap="${escapeHTML(item.id)}" data-day="${escapeHTML(day.id)}">Swap</button></div><div class="row" style="justify-content:flex-start;margin-top:8px"><span class="subtle">Sets</span>${stepper(item.sets,`sets:${day.id}:${item.id}`)}<span class="subtle">Reps / min</span>${stepper(item.reps,`reps:${day.id}:${item.id}`)}</div></div>`).join("")}
       <button class="text-button" data-add-exercise="${escapeHTML(day.id)}">＋ Add exercise</button></section>`).join("")}
     <button class="button danger full" data-action="delete-plan">Delete this plan</button>`;
@@ -674,60 +674,153 @@ function renderPlanDetail(plan) {
 
 function stepper(value, key) { return `<span class="stepper"><button type="button" data-adjust="${escapeHTML(key)}" data-delta="-1" aria-label="Decrease">−</button><output>${value}</output><button type="button" data-adjust="${escapeHTML(key)}" data-delta="1" aria-label="Increase">+</button></span>`; }
 
-function muscleMap(values) {
-  const active = new Set(values);
-  const pair = d => [{d}, {d, mirror:true}];
-  const regions = {
-    front: {
-      shoulders:pair('M48 49 C42 48 37 52 35 58 C34 64 38 69 44 72 C49 66 53 60 59 56 C57 52 53 50 48 49Z'),
-      chest:pair('M56 62 C61 59 67 60 70 63 L70 78 C64 81 58 78 54 73 C52 69 53 65 56 62Z'),
-      biceps:pair('M39 67 C43 65 47 68 48 73 L44 84 L38 96 C34 95 32 92 32 88 L35 76Z'),
-      triceps:pair('M37 69 C34 74 32 81 30 88 L27 98 Q30 101 34 99 L41 84 L45 73Z'),
-      forearms:pair('M29 95 Q33 98 37 96 L32 108 L27 117 Q23 119 21 115 L24 106Z'),
-      abs:[
-        'M62 81 Q66 80 69 82 L69 91 Q65 93 62 91Z','M71 82 Q74 80 78 81 L78 91 Q74 93 71 91Z',
-        'M62 94 Q66 95 69 93 L69 102 Q65 104 62 102Z','M71 93 Q74 95 78 94 L78 102 Q74 104 71 102Z',
-        'M63 105 Q66 106 69 104 L69 113 Q66 115 63 113Z','M71 104 Q74 106 77 105 L77 113 Q74 115 71 113Z'
-      ],
-      obliques:pair('M50 77 Q55 79 59 82 L59 111 Q55 117 50 120 C52 105 51 91 50 77Z'),
-      quads:[...pair('M51 126 C57 123 64 125 68 131 L66 151 C64 163 61 174 57 179 Q51 179 48 173 L47 149 Q47 136 51 126Z'),...pair('M68 132 Q69 129 70 129 L70 162 Q68 174 64 178 Q61 175 62 168 L65 151Z')],
-      calves:pair('M49 178 Q54 181 59 178 C58 190 55 202 54 212 L50 229 Q46 232 43 229 L45 213 Q46 198 47 188Z')
-    },
-    back: {
-      shoulders:pair('M48 49 C42 48 37 52 35 58 C34 64 38 69 44 72 C49 66 53 60 59 56 C57 52 53 50 48 49Z'),
-      triceps:pair('M43 66 C39 65 36 69 35 75 L31 90 Q31 96 35 99 L41 91 L47 74Z'),
-      biceps:pair('M42 68 Q46 66 49 70 L45 83 L39 94 Q35 94 33 91 L37 76Z'),
-      forearms:pair('M29 95 Q33 98 37 96 L32 108 L27 117 Q23 119 21 115 L24 106Z'),
-      traps:['M63 46 Q70 53 77 46 L87 53 Q83 62 78 70 L70 77 L62 70 Q57 62 53 53Z'],
-      lats:pair('M54 71 Q61 75 68 80 L68 114 Q63 122 56 126 Q52 109 49 93 Q48 81 54 71Z'),
-      lowerBack:pair('M63 85 Q67 87 69 87 L69 126 Q65 132 60 131 Q63 114 62 100Z'),
-      glutes:pair('M51 126 Q60 123 69 128 L69 149 Q64 155 57 155 Q49 152 46 144 Q46 134 51 126Z'),
-      hamstrings:[...pair('M50 154 Q59 156 67 151 L65 177 Q63 190 57 196 Q50 196 47 190 Q44 183 46 174Z'),'M68 153 Q69 155 70 155 Q71 155 72 153 L71 184 Q70 190 70 192 Q69 190 69 184Z'],
-      calves:pair('M49 195 Q54 197 59 194 C58 206 55 217 54 226 L50 237 Q46 240 43 237 L45 223 Q46 210 47 202Z'),
-      obliques:pair('M52 85 Q57 90 61 97 L60 122 Q56 128 52 128 Q55 108 52 85Z')
+const muscleMapGeometry = (() => {
+  const pair = (muscle,d,view) => [
+    {muscle,side:view === "front" ? "right" : "left",d},
+    {muscle,side:view === "front" ? "left" : "right",d,mirror:true}
+  ];
+  const front = [
+    ...pair("shoulders","M52 42 C47 40 41 42 37 47 C33 52 32 58 35 63 C38 66 42 65 46 61 C50 58 53 55 55 52Z","front"),
+    ...pair("chest","M52 53 C57 50 64 50 70 53 L70 77 C64 79 57 77 52 73 C49 68 49 59 52 53Z","front"),
+    ...pair("serratus","M48 67 Q52 68 55 72 L54 77 Q51 75 47 74Z","front"),
+    ...pair("serratus","M47 76 Q51 77 54 80 L53 85 Q50 82 46 82Z","front"),
+    ...pair("serratus","M46 85 Q50 86 53 89 L52 94 Q49 91 45 91Z","front"),
+    ...pair("biceps","M39 58 C42 58 46 61 46 66 L43 77 Q41 83 37 87 L32 83 L35 70 Q36 62 39 58Z","front"),
+    ...pair("triceps","M34 59 C31 63 29 69 27 76 L25 83 Q28 87 32 86 L38 74 L41 63Z","front"),
+    ...pair("forearms","M24 86 Q28 89 33 87 L31 98 L27 110 Q24 114 20 111 L20 102Z","front"),
+    ...pair("obliques","M50 77 Q55 79 59 82 L58 112 Q55 119 50 122 C52 108 51 93 50 77Z","front"),
+    ...pair("abs","M61 80 Q65 79 69 81 L69 90 Q65 92 61 90Z","front"),
+    ...pair("abs","M61 93 Q65 94 69 92 L69 101 Q65 103 61 101Z","front"),
+    ...pair("abs","M62 104 Q66 105 69 103 L69 112 Q66 114 62 112Z","front"),
+    ...pair("quads","M50 135 C56 136 62 140 66 147 L64 164 C62 176 59 187 55 194 Q50 196 46 191 L42 181 Q41 166 44 153 C45 146 47 140 50 135Z","front"),
+    ...pair("quads","M58 144 Q62 145 66 150 L64 174 Q62 185 58 192 Q54 191 53 187 C56 174 57 159 58 144Z","front"),
+    ...pair("adductors","M64 145 Q67 144 69 146 L69 180 Q67 188 64 190 Q61 187 60 183 Q64 166 64 145Z","front"),
+    ...pair("calves","M47 198 Q52 201 58 198 C57 209 54 221 53 234 L49 247 Q45 250 41 247 L43 234 Q44 217 45 207Z","front")
+  ];
+  const back = [
+    ...pair("shoulders","M52 42 C47 40 41 42 37 47 C33 52 32 58 35 63 C38 66 42 65 46 61 C50 58 53 55 55 52Z","back"),
+    ...pair("traps","M64 39 Q70 44 76 39 L84 45 Q81 54 77 64 L70 70 L63 64 Q59 54 56 45Z","back"),
+    ...pair("upperBack","M55 53 Q61 56 69 63 L69 82 Q64 85 59 82 Q55 74 52 65Z","back"),
+    ...pair("upperBack","M56 67 Q62 70 68 77 L67 94 Q62 96 58 92 L53 80Z","back"),
+    ...pair("lats","M53 70 Q59 73 66 79 L66 112 Q62 120 56 124 Q52 110 49 96 Q47 82 53 70Z","back"),
+    ...pair("lowerBack","M63 80 Q66 83 69 83 L69 125 Q65 131 60 130 Q62 112 61 98Z","back"),
+    ...pair("triceps","M39 59 C35 60 32 65 30 72 L27 83 Q28 88 32 90 L38 82 L44 66Z","back"),
+    ...pair("forearms","M25 86 Q29 89 33 87 L31 99 L27 111 Q24 114 20 111 L20 103Z","back"),
+    ...pair("obliques","M52 82 Q57 86 61 93 L60 122 Q56 128 51 130 Q54 110 52 82Z","back"),
+    ...pair("glutes","M51 128 Q59 124 69 129 L69 151 Q64 157 57 158 Q49 155 46 148 Q46 137 51 128Z","back"),
+    ...pair("hamstrings","M49 157 Q57 159 66 154 L65 179 Q62 192 57 198 Q50 198 46 191 Q43 184 45 173Z","back"),
+    ...pair("hamstrings","M59 158 Q63 158 67 156 L66 183 Q64 193 61 196 Q57 194 56 190 Q60 176 59 158Z","back"),
+    ...pair("calves","M47 198 Q52 201 58 198 C57 210 54 222 53 235 L49 248 Q45 251 41 248 L43 235 Q44 218 45 207Z","back"),
+    ...pair("calves","M53 202 Q58 201 61 198 C61 211 58 222 57 232 L54 243 Q51 245 48 243 L50 231 Q51 215 53 202Z","back")
+  ];
+  return {front,back};
+})();
+
+let muscleMapInstance = 0;
+
+function muscleMap(exercises = [], workout = null) {
+  const records = Array.isArray(exercises) ? exercises : [];
+  const items = records.length && typeof records[0] === "string" ? [{muscles:records}] : records;
+  const roles = new Map();
+  const sidesFrom = value => {
+    if (value && typeof value === "object" && !Array.isArray(value)) value = value.side || value.laterality;
+    if (Array.isArray(value)) {
+      const selected = value.flatMap(item => sidesFrom(item));
+      return [...new Set(selected.length ? selected : ["left","right"])];
+    }
+    if (typeof value !== "string" || !value.trim() || /^(both|bilateral|all)$/i.test(value)) return ["left","right"];
+    const text = value.toLowerCase();
+    const selected = [];
+    if (text.includes("left")) selected.push("left");
+    if (text.includes("right")) selected.push("right");
+    return selected.length ? selected : ["left","right"];
+  };
+  const add = (muscle,role,sides) => {
+    if (!muscle) return;
+    if (!roles.has(muscle)) roles.set(muscle,new Map());
+    const bySide = roles.get(muscle);
+    for (const side of sides) {
+      const current = bySide.get(side);
+      if (role === "primary" || !current) bySide.set(side,role);
     }
   };
-  const filterId = `map-red-neutral-${Math.random().toString(36).slice(2)}`;
-  const layers = side => Object.entries(regions[side]).flatMap(([muscle, paths]) => active.has(muscle) ? paths.map(path => {
-    const d = typeof path === 'string' ? path : path.d;
-    const transform = typeof path === 'string' ? '' : path.mirror ? 'translate(140 0) scale(-1 1)' : '';
-    return `<path class="muscle hot" d="${d}"${transform ? ` transform="${transform}"` : ''}/>`;
-  }) : []).join('');
-  const used = [...active].map(label).sort().join(' · ');
-  return `<div class="muscle-map"><svg class="anatomy-figure" viewBox="0 0 290 247" role="img" aria-label="Front and back muscle map">
-    <defs><filter id="${filterId}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 -1 -1 0 0" result="red-mask-raw"/>
-      <feComponentTransfer in="red-mask-raw" result="red-mask"><feFuncA type="linear" slope="10" intercept="-1"/></feComponentTransfer>
-      <feFlood flood-color="#c6c9ca" result="neutral-gray"/>
-      <feComposite in="neutral-gray" in2="red-mask" operator="in" result="neutralized-red"/>
-      <feComposite in="neutralized-red" in2="SourceGraphic" operator="over"/>
-    </filter></defs>
-    <image href="./muscle-map-reference.png?v=22" x="0" y="0" width="290" height="247" preserveAspectRatio="none" filter="url(#${filterId})"/>
-    <g transform="translate(10 0)">${layers('front')}</g><g transform="translate(150 0)">${layers('back')}</g>
-  </svg></div><div class="muscle-legend">${escapeHTML(used || 'No muscle groups listed')}</div>`;
+  const addExercise = exercise => {
+    if (typeof exercise === "string") { add(exercise,"primary",["left","right"]); return; }
+    if (!exercise || typeof exercise !== "object") return;
+    for (const muscle of exercisePrimaryMuscles(exercise)) {
+      const side = exercise.muscleSides?.[muscle] ?? exercise.muscleLaterality?.[muscle] ?? exercise.sides?.[muscle] ?? exercise.laterality ?? exercise.side;
+      add(muscle,"primary",sidesFrom(side));
+    }
+    for (const muscle of exerciseSecondaryMuscles(exercise)) {
+      const side = exercise.muscleSides?.[muscle] ?? exercise.muscleLaterality?.[muscle] ?? exercise.sides?.[muscle] ?? exercise.laterality ?? exercise.side;
+      add(muscle,"secondary",sidesFrom(side));
+    }
+  };
+  items.forEach(addExercise);
+  const workoutSides = workout?.muscleSides || workout?.muscleLaterality || {};
+  for (const muscle of workout?.primaryMuscles || []) add(muscle,"primary",sidesFrom(workoutSides[muscle] ?? workout?.laterality ?? workout?.side));
+  for (const muscle of workout?.secondaryMuscles || []) add(muscle,"secondary",sidesFrom(workoutSides[muscle] ?? workout?.laterality ?? workout?.side));
+
+  const primary = [...roles].filter(([,bySide]) => bySide.get("left") === "primary" || bySide.get("right") === "primary").map(([muscle])=>label(muscle)).sort();
+  const secondary = [...roles].filter(([,bySide]) => bySide.get("left") === "secondary" || bySide.get("right") === "secondary").map(([muscle])=>label(muscle)).sort();
+  const description = primary.length || secondary.length
+    ? "Primary muscles: " + (primary.join(", ") || "none") + ". Secondary muscles: " + (secondary.join(", ") || "none") + "."
+    : "No muscles selected. Both figures are inactive.";
+  const mapId = "muscle-map-" + (++muscleMapInstance);
+  const renderFigure = view => {
+    const figureTransform = view === "front" ? "translate(10 5)" : "translate(150 5)";
+    const arm = "M51 42 C45 40 39 42 35 48 C31 54 30 63 27 72 L22 86 C20 91 18 95 17 100 L14 111 L10 119 Q9 121 11 123 Q13 124 15 121 L20 114 L17 125 Q17 128 19 126 L24 116 L22 128 Q22 130 24 128 L29 117 L29 127 Q30 130 32 127 L34 114 C35 108 36 103 35 97 L39 84 L45 69 L54 57Z";
+    const leg = view === "front"
+      ? "M52 130 C46 132 42 139 40 148 C38 158 39 169 42 179 L45 192 C48 199 48 205 47 213 L43 236 C42 242 39 247 36 251 Q39 255 52 254 C56 250 56 244 56 237 L59 217 C61 207 65 195 66 184 L69 148 L63 137Z"
+      : "M52 130 C46 132 42 139 40 148 C39 158 40 170 43 182 L46 195 C49 202 49 207 48 215 L44 237 C43 243 40 248 37 251 Q40 255 53 254 C57 250 57 244 57 237 L59 218 C61 207 64 196 66 184 L69 148 L63 137Z";
+    const foot = view === "front"
+      ? "M37 248 Q42 250 51 248 L56 251 L56 255 Q49 258 34 256 L30 254 Q32 250 37 248Z"
+      : "M38 248 Q44 250 52 248 L57 251 L57 255 Q50 258 36 256 L31 254 Q33 250 38 248Z";
+    const torso = "M62 34 Q70 38 78 34 L80 41 C84 42 89 43 93 47 Q88 54 87 64 C89 76 89 89 87 101 L89 118 Q91 128 83 135 L76 143 L70 147 L64 143 L57 135 Q49 128 51 118 L53 101 C51 89 51 76 53 64 Q52 54 47 47 C51 43 56 42 60 41Z";
+    const pelvis = "M52 119 Q60 126 68 128 L70 126 L72 128 Q80 126 88 119 L89 133 Q84 141 77 149 L70 154 L63 149 Q56 141 51 133Z";
+    const head = "M62 7 Q65 4 70 4 Q75 4 78 7 C81 10 81 17 80 23 Q79 30 74 34 L70 36 L66 34 Q61 30 60 23 Q59 16 60 10Z";
+    const base = '<g class="anatomy-base">' +
+      '<path d="' + arm + '"/><path d="' + arm + '" transform="translate(140 0) scale(-1 1)"/>' +
+      '<path d="' + leg + '"/><path d="' + leg + '" transform="translate(140 0) scale(-1 1)"/>' +
+      '<path d="' + foot + '"/><path d="' + foot + '" transform="translate(140 0) scale(-1 1)"/>' +
+      '<path d="' + torso + '"/><path d="' + pelvis + '"/>' +
+      '<path d="M63 29 Q70 34 77 29 L78 45 Q75 51 70 52 Q65 51 62 45Z"/>' +
+      '<path d="' + head + '"/><path d="M60 18 Q57 17 58 23 Q59 27 62 27 M80 18 Q83 17 82 23 Q81 27 78 27"/>' +
+      '</g>';
+    const regions = muscleMapGeometry[view].map((shape,index) => {
+      const role = roles.get(shape.muscle)?.get(shape.side) || "inactive";
+      const transform = shape.mirror ? ' transform="translate(140 0) scale(-1 1)"' : "";
+      const regionId = mapId + "-" + view + "-" + shape.side + "-" + shape.muscle + "-" + index;
+      return '<path id="' + regionId + '" class="muscle-region" data-muscle-id="' + shape.muscle + '" data-side="' + shape.side + '" data-role="' + role + '" d="' + shape.d + '"' + transform + '/>';
+    }).join("");
+    const kneecap = view === "front"
+      ? '<path d="M44 190 Q51 194 58 190 L59 198 Q52 201 46 198Z"/><path d="M44 190 Q51 194 58 190 L59 198 Q52 201 46 198Z" transform="translate(140 0) scale(-1 1)"/>'
+      : '<path d="M44 191 Q51 195 58 191 L59 199 Q52 202 46 199Z"/><path d="M44 191 Q51 195 58 191 L59 199 Q52 202 46 199Z" transform="translate(140 0) scale(-1 1)"/>';
+    const details = view === "front"
+      ? '<path d="M62 41 Q70 46 78 41 M55 53 Q61 51 69 54 M71 54 Q79 51 85 53 M70 54 L70 77 M59 79 Q70 82 81 79 M59 92 Q70 95 81 92 M60 103 Q70 106 80 103 M49 77 Q53 84 55 94 M91 77 Q87 84 85 94 M54 127 Q60 137 70 144 Q80 137 86 127 M45 194 Q52 198 59 194 M81 194 Q88 198 95 194 M47 214 Q52 217 58 214 M82 214 Q88 217 93 214"/>'
+      : '<path d="M62 40 Q70 46 78 40 M55 52 Q61 59 68 64 M85 52 Q79 59 72 64 M70 52 L70 126 M54 69 Q61 78 66 92 M86 69 Q79 78 74 92 M52 88 Q58 96 60 111 M88 88 Q82 96 80 111 M52 126 Q61 132 69 129 M88 126 Q79 132 71 129 M51 154 Q60 159 68 154 M89 154 Q80 159 72 154 M48 190 Q54 195 60 191 M92 190 Q86 195 80 191 M47 213 Q53 216 59 212 M93 213 Q87 216 81 212"/>';
+    return '<g transform="' + figureTransform + '">' + base + '<g class="muscle-regions">' + regions + '</g><g class="anatomy-joints" aria-hidden="true">' + kneecap + '</g><g class="anatomy-detail" aria-hidden="true">' + details + '</g></g>';
+  };
+  const alt = "Muscle map. " + description;
+  return '<div class="muscle-map"><svg class="anatomy-figure" viewBox="0 0 290 265" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + escapeHTML(alt) + '"><title>Front and back muscle map</title><desc>' + escapeHTML(description) + '</desc>' + renderFigure("front") + renderFigure("back") + '</svg></div>';
 }
+
+function exercisePrimaryMuscles(exercise) {
+  if (Array.isArray(exercise?.primaryMuscles)) return exercise.primaryMuscles;
+  if (Array.isArray(exercise?.secondaryMuscles)) return (exercise.muscles || []).filter(muscle => !exercise.secondaryMuscles.includes(muscle));
+  return exercise?.muscles || [];
+}
+
+function exerciseSecondaryMuscles(exercise) {
+  return Array.isArray(exercise?.secondaryMuscles) ? exercise.secondaryMuscles : [];
+}
+
+function exerciseTargetMuscles(exercise) {
+  return [...new Set([...exercisePrimaryMuscles(exercise), ...exerciseSecondaryMuscles(exercise)])];
+}
+
 function exerciseSummary(exercise) {
-  return `${label(exercise.gear)} · ${label(exercise.pattern)} · ${(exercise.muscles || []).map(label).join(", ")}`;
+  return `${label(exercise.gear)} · ${label(exercise.pattern)} · ${exerciseTargetMuscles(exercise).map(label).join(", ")}`;
 }
 
 function exerciseSearchRow(exercise) {
@@ -770,7 +863,7 @@ function openExerciseProfile(exercise,context=null) {
     <section class="exercise-profile-card"><span class="eyebrow">Quick info</span><p class="exercise-meta">${escapeHTML(exerciseSummary(selected))}</p></section>
     <section class="exercise-profile-card"><strong>Specific equipment</strong><p>${escapeHTML(details.specificEquipment)}</p></section>
     <section><h3 class="section-title">How to do it</h3><ol class="exercise-instructions">${details.instructions.map(step=>`<li>${escapeHTML(step)}</li>`).join("")}</ol><p class="exercise-safety">Start with a light load or easy pace while learning the movement. Keep each rep controlled and stop if you feel sharp pain or dizziness.</p></section>
-    <section><h3 class="section-title">Muscles worked</h3>${muscleMap(selected.muscles)}</section>
+    <section><h3 class="section-title">Muscles worked</h3>${muscleMap([selected])}</section>
     <div class="modal-actions">${actions}</div>
   </div>`);
   modal._exerciseContext=context;
@@ -778,9 +871,13 @@ function openExerciseProfile(exercise,context=null) {
 
 function openExerciseEditor(exercise = {id:"",name:"",pattern:"push",gear:"bodyweight",muscles:[]},context=null) {
   const existing=exercise.id?withExerciseDetails(exercise):{...exercise,description:"",specificEquipment:"",instructions:[]};
+  const primaryMuscles=exercisePrimaryMuscles(exercise);
+  const secondaryMuscles=exerciseSecondaryMuscles(exercise);
   showModal(exercise.id ? "Edit exercise" : "New exercise", `<form id="exercise-form" data-id="${escapeHTML(exercise.id)}"><div class="field"><label>Exercise name</label><input name="name" required value="${escapeHTML(exercise.name)}" placeholder="e.g. Goblet squat"></div>
     <div class="grid2"><div class="field"><label>Movement</label><select name="pattern">${Object.keys(patternNames).map(key=>`<option value="${key}" ${exercise.pattern===key?"selected":""}>${label(key)}</option>`).join("")}</select></div><div class="field"><label>Equipment category</label><select name="gear">${gearOptions.map(key=>`<option value="${key}" ${exercise.gear===key?"selected":""}>${label(key)}</option>`).join("")}</select></div></div>
-    <div class="field"><span class="field-label">Muscles</span>${checkedOptions(muscles,exercise.muscles,"muscles")}</div>
+    <div class="field"><span class="field-label">Primary muscles</span>${checkedOptions(muscles,primaryMuscles,"primaryMuscles")}</div>
+    <div class="field"><span class="field-label">Secondary muscles</span>${checkedOptions(muscles,secondaryMuscles,"secondaryMuscles")}</div>
+    <p class="subtle">Primary muscles use coral; secondary muscles use dusty rose. A primary assignment takes priority if the same muscle is secondary in another exercise.</p>
     <div class="field"><label>Description</label><textarea name="description" rows="3" placeholder="What this exercise trains and how it moves">${escapeHTML(existing.description)}</textarea></div>
     <div class="field"><label>Specific equipment needed</label><textarea name="specificEquipment" rows="2" placeholder="Name the exact machine, attachment, or equipment">${escapeHTML(existing.specificEquipment)}</textarea></div>
     <div class="field"><label>How to do it</label><textarea name="instructions" rows="6" placeholder="One step per line">${escapeHTML(existing.instructions.join("\n"))}</textarea></div>
@@ -790,7 +887,7 @@ function openExerciseEditor(exercise = {id:"",name:"",pattern:"push",gear:"bodyw
 
 function renderHistory() {
   const history = [...data.history].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  app.innerHTML = `${heading("Workout log", "Keep the sessions you complete in one place.")}<button class="button primary" data-action="new-workout">＋ Log a workout</button><h2 class="section-title">Recent sessions</h2>${history.length ? history.map(workout=>`<section class="card"><div class="row"><div><strong>${escapeHTML(workout.name)}</strong><div class="subtle">${new Date(workout.date).toLocaleDateString()} · ${workout.sets.length} sets</div></div><span class="badge">${escapeHTML(workout.weightUnit)}</span></div>${muscleMap(workout.sets.flatMap(set=>set.exercise.muscles))}${workout.sets.map(set=>`<div class="exercise-row"><div><div class="exercise-title">${escapeHTML(set.exercise.name)}</div><div class="exercise-meta">${set.amount} ${escapeHTML(set.unit)}${set.weight ? ` · ${set.weight} ${escapeHTML(workout.weightUnit)}` : ""}</div></div></div>`).join("")}</section>`).join("") : `<div class="card empty"><b>No workouts yet</b>Log your first session from a plan or here.</div>`}`;
+  app.innerHTML = `${heading("Workout log", "Keep the sessions you complete in one place.")}<button class="button primary" data-action="new-workout">＋ Log a workout</button><h2 class="section-title">Recent sessions</h2>${history.length ? history.map(workout=>`<section class="card"><div class="row"><div><strong>${escapeHTML(workout.name)}</strong><div class="subtle">${new Date(workout.date).toLocaleDateString()} · ${workout.sets.length} sets</div></div><span class="badge">${escapeHTML(workout.weightUnit)}</span></div>${muscleMap(workout.sets.map(set=>set.exercise),workout)}${workout.sets.map(set=>`<div class="exercise-row"><div><div class="exercise-title">${escapeHTML(set.exercise.name)}</div><div class="exercise-meta">${set.amount} ${escapeHTML(set.unit)}${set.weight ? ` · ${set.weight} ${escapeHTML(workout.weightUnit)}` : ""}</div></div></div>`).join("")}</section>`).join("") : `<div class="card empty"><b>No workouts yet</b>Log your first session from a plan or here.</div>`}`;
 }
 
 function openWorkoutEditor(day = null) {
@@ -1066,7 +1163,8 @@ document.addEventListener("submit", event => {
     closeModal();saveAndRender("Weekly schedule updated.");
   }
   if(form.id==="exercise-form"){
-    const id=form.dataset.id||uid();const exercise=withExerciseDetails({id,name:String(values.get("name")).trim(),pattern:values.get("pattern"),gear:values.get("gear"),muscles:values.getAll("muscles"),description:String(values.get("description")||"").trim(),specificEquipment:String(values.get("specificEquipment")||"").trim(),instructions:String(values.get("instructions")||"").split(/\r?\n/).map(step=>step.trim()).filter(Boolean)});
+    const id=form.dataset.id||uid();const primaryMuscles=values.getAll("primaryMuscles"),secondaryMuscles=values.getAll("secondaryMuscles"),targetMuscles=[...new Set([...primaryMuscles,...secondaryMuscles])];
+    const exercise=withExerciseDetails({id,name:String(values.get("name")).trim(),pattern:values.get("pattern"),gear:values.get("gear"),muscles:targetMuscles,primaryMuscles,secondaryMuscles,description:String(values.get("description")||"").trim(),specificEquipment:String(values.get("specificEquipment")||"").trim(),instructions:String(values.get("instructions")||"").split(/\r?\n/).map(step=>step.trim()).filter(Boolean)});
     if(!exercise.muscles.length){toast("Select at least one muscle group.");return;}
     const index=data.library.findIndex(item=>item.id===id);if(index>=0)data.library[index]=exercise;else data.library.push(exercise);
     data.plans.forEach(plan=>plan.days.forEach(day=>day.items.forEach(item=>{if(item.exercise.id===id)item.exercise=exercise;})));

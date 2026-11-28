@@ -515,33 +515,19 @@ main {
 }
 
 .muscle-map {
+  --muscle-background: #E7E7E7;
+  --muscle-inactive: #B7B7B5;
+  --muscle-seams: #E3E3E1;
+  --muscle-secondary: #C48F8E;
+  --muscle-primary: #C96361;
   display: block;
   width: 100%;
   max-width: 480px;
-  aspect-ratio: 290 / 247;
+  aspect-ratio: 290 / 265;
   margin: 0 auto;
   padding: 0;
-  background: #e8e8e8;
+  background: var(--muscle-background);
   overflow: hidden
-}
-
-.figure-card {
-  min-width: 0;
-  height: 100%;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  text-align: center;
-  padding: 0;
-  overflow: hidden
-}
-
-.figure-card svg {
-  width: 100%;
-  height: 100%;
-  max-height: none;
-  display: block;
-  margin: 0 auto
 }
 
 .anatomy-figure {
@@ -551,53 +537,44 @@ main {
   shape-rendering: geometricPrecision
 }
 
-.figure-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  margin-top: 3px
-}
-
-.body-base {
-  fill: #d0d2d3;
-  stroke: #adb1b2;
-  stroke-width: 1.15;
+.anatomy-base path {
+  fill: var(--muscle-inactive);
+  stroke: var(--muscle-seams);
+  stroke-width: .65;
   stroke-linecap: round;
   stroke-linejoin: round
 }
 
-.muscle {
-  fill: #c6c9ca;
-  stroke: #afb3b4;
+.muscle-region {
+  fill: var(--muscle-inactive);
+  stroke: var(--muscle-seams);
   stroke-width: .9;
   stroke-linecap: round;
-  stroke-linejoin: round
+  stroke-linejoin: round;
+  transition: fill .16s ease
 }
 
-.muscle.hot {
-  fill: #c46e76;
-  fill-opacity: .78;
-  stroke: #f0dcde;
-  stroke-width: .8;
-  stroke-opacity: .8;
-  pointer-events: none
+.muscle-region[data-role="primary"] {
+  fill: var(--muscle-primary)
 }
 
-.anatomy-lines {
+.muscle-region[data-role="secondary"] {
+  fill: var(--muscle-secondary)
+}
+
+.anatomy-joints path {
+  fill: var(--muscle-inactive);
+  stroke: var(--muscle-seams);
+  stroke-width: .7
+}
+
+.anatomy-detail {
   fill: none;
-  stroke: #a6abad;
-  stroke-width: .8;
+  stroke: var(--muscle-seams);
+  stroke-width: .85;
   stroke-linecap: round;
   stroke-linejoin: round;
-  opacity: .78;
   pointer-events: none
-}
-
-.muscle-legend {
-  font-size: 11px;
-  color: var(--muted);
-  text-align: center;
-  margin: 9px 0
 }
 
 .day-row {
@@ -867,12 +844,7 @@ main {
 :root[data-theme="dark"] .field input,:root[data-theme="dark"] .field select,:root[data-theme="dark"] .field textarea,:root[data-theme="dark"] .searchbox,:root[data-theme="dark"] .modal input,:root[data-theme="dark"] .modal select { border-color: var(--line); background: var(--paper); color: var(--ink) }
 :root[data-theme="dark"] .check-option,:root[data-theme="dark"] .chip,:root[data-theme="dark"] .stepper button { border-color: var(--line); background: var(--paper); color: var(--ink) }
 :root[data-theme="dark"] .tabbar { background: #201f22f2 }
-:root[data-theme="dark"] .muscle-map { background: #e9e9e9 }
-:root[data-theme="dark"] .figure-card { background: transparent }
-:root[data-theme="dark"] .body-base { fill: #d0d2d3; stroke: #adb1b2 }
-:root[data-theme="dark"] .muscle { fill: #c6c9ca; stroke: #afb3b4 }
-:root[data-theme="dark"] .muscle.hot { fill: #c46e76; stroke: #f0dcde }
-:root[data-theme="dark"] .anatomy-lines { stroke: #a6abad; opacity: .78 }
+:root[data-theme="dark"] .muscle-map { --muscle-background: #E7E7E7 }
 :root[data-theme="dark"] .day-exercise { border-color: var(--line) }
 :root[data-theme="dark"] .badge { background: #39363d; color: #e3dfe6 }
 :root[data-theme="dark"] .progress { background: #39363d }
