@@ -693,3 +693,22 @@ main {
 :root[data-theme="dark"] .modal-close { background: #39363d; color: var(--ink) }
 :root[data-theme="dark"] .button.danger { background: #442629; color: #ffadb2 }
 :root[data-theme="dark"] .plan-card:hover { border-color: #87434a }
+.log-set {
+  grid-template-columns: minmax(0,1fr) 34px;
+  align-items: start;
+}
+.log-set > label { grid-column: 1; grid-row: 1; min-width: 0; }
+.log-set > input[data-log-amount] { grid-column: 1; grid-row: 2; width: 100%; max-width: 120px; }
+.log-set > button[data-remove-log] { grid-column: 2; grid-row: 1; }
+.log-set > .set-weight-control,
+.log-set > span { grid-column: 1 / -1; grid-row: 3; }
+.set-weight-control {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 88px;
+  gap: 4px 10px;
+  align-items: center;
+  width: 100%;
+}
+.log-set .set-weight-label { grid-column: 1; grid-row: 1; display: block; font-size: 11px; color: var(--muted); }
+.set-weight-control input[type="number"] { grid-column: 2; grid-row: 1; width: 100%; }
+.set-weight-control input[type="range"] { grid-column: 1 / -1; grid-row: 2; width: 100%; min-height: 28px; padding: 0; accent-color: var(--red); }
