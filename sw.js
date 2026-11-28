@@ -1,4 +1,4 @@
-const CACHE = "rep-atlas-v16";
+const CACHE = "rep-atlas-v17";
 const FILES = ["./", "./index.html", "./app.css", "./app.js", "./push.js/push.js", "./catalog.json", "./manifest.webmanifest", "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));

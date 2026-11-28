@@ -517,24 +517,31 @@ main {
 .muscle-map {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  align-items: start;
   gap: 8px;
   max-width: 480px;
   margin: 0 auto
 }
 
 .figure-card {
-  background: #faf9f8;
+  min-width: 0;
+  background: #f2f1f0;
   border: 1px solid var(--line);
   border-radius: 14px;
   text-align: center;
-  padding: 10px 4px 7px
+  padding: 10px 7px 8px;
+  overflow: hidden
 }
 
 .figure-card svg {
   width: 100%;
   height: auto;
-  max-height: 235px
+  max-height: 280px;
+  display: block;
+  margin: 0 auto
 }
+
+.anatomy-figure { shape-rendering: geometricPrecision }
 
 .figure-label {
   font-size: 11px;
@@ -544,21 +551,34 @@ main {
 }
 
 .body-base {
-  fill: #dedbd9;
-  stroke: #aaa5a2;
-  stroke-width: 1.6;
+  fill: #d9dcdd;
+  stroke: #aeb3b4;
+  stroke-width: 1.7;
+  stroke-linecap: round;
   stroke-linejoin: round
 }
 
 .muscle {
-  fill: #c5c1bf;
-  stroke: #fff;
-  stroke-width: 1.4;
+  fill: #c5c9ca;
+  stroke: #f2f3f3;
+  stroke-width: 1.5;
+  stroke-linecap: round;
   stroke-linejoin: round
 }
 
 .muscle.hot {
-  fill: #e03643
+  fill: #d6535d;
+  stroke: #f5d7d9
+}
+
+.anatomy-lines {
+  fill: none;
+  stroke: #a2a8a9;
+  stroke-width: 1.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .8;
+  pointer-events: none
 }
 
 .muscle-legend {
@@ -837,7 +857,9 @@ main {
 :root[data-theme="dark"] .tabbar { background: #201f22f2 }
 :root[data-theme="dark"] .figure-card { background: #201f22 }
 :root[data-theme="dark"] .body-base { fill: #55525a; stroke: #807c84 }
-:root[data-theme="dark"] .muscle { stroke: #201f22 }
+:root[data-theme="dark"] .muscle { fill: #77747b; stroke: #333137 }
+:root[data-theme="dark"] .muscle.hot { fill: #dc5963; stroke: #443038 }
+:root[data-theme="dark"] .anatomy-lines { stroke: #97929a; opacity: .72 }
 :root[data-theme="dark"] .day-exercise { border-color: var(--line) }
 :root[data-theme="dark"] .badge { background: #39363d; color: #e3dfe6 }
 :root[data-theme="dark"] .progress { background: #39363d }
