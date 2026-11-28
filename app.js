@@ -9,6 +9,13 @@ const muscleNames = {lowerBack:"Lower back",upperBack:"Upper back"};
 const patternNames = {push:"Push",pull:"Pull",squat:"Squat",hinge:"Hinge",core:"Core",conditioning:"Cardio"};
 const specificEquipmentById = {
   "machine-chest-press":"Seated chest-press machine, selectorized or plate-loaded",
+  "skierg-intervals":"SkiErg / ski trainer with adjustable damper; use a moderate damper (about 3–5) and drive power through the strap handles",
+  "skierg-power-intervals":"SkiErg / ski trainer with adjustable damper; use a moderate damper (about 3–5) and drive power through the strap handles",
+  "skierg-steady":"SkiErg / ski trainer with adjustable damper; use a moderate damper (about 3–5)",
+  "assault-bike-intervals":"Air bike / fan bike with moving handles (AssaultBike or equivalent)",
+  "treadmill-hill-repeats":"Treadmill with adjustable incline and safety clip",
+  "rowing-power-intervals":"Indoor rowing ergometer with adjustable damper and foot straps",
+  "stair-climber-hiit":"Stair-climber machine with adjustable step rate",
   "machine-incline-press":"Incline chest-press machine",
   "pec-deck":"Pec-deck machine with chest-fly arms or pads",
   "machine-row":"Seated row machine with handles",
@@ -136,8 +143,15 @@ function exerciseInstructions(exercise) {
   const lower = name.toLowerCase();
   const equipment = equipmentNeeded(exercise);
   if (exercise.pattern === "conditioning") {
-    const intervals = /interval/.test(lower);
+    const intervals = /interval|hard|hiit|power|repeat/.test(lower);
     const machine = exercise.gear === "cardio";
+    if(/skierg/.test(lower))return [
+      `Set up ${name} using ${equipment}; adjust the foot straps and check that the handles move freely.`,
+      "Stand facing the monitor with feet about hip-width apart, knees soft, and one handle in each hand.",
+      "Hinge gently at the hips and brace your trunk, then pull both handles down using your lats and arms, finishing near your thighs.",
+      "Let the handles return overhead under control; extend your arms and hips without arching your lower back.",
+      "Keep the damper moderate (about 3–5 on a Concept2). Make the work harder with a stronger, faster pull rather than cranking up the damper."
+    ];
     return [
       `Set up ${name} using ${equipment}; check the space or route before you begin.`,
       machine ? "Adjust the seat, handles, or step position before increasing speed or resistance." : "Begin at an easy pace until your breathing and movement feel settled.",
@@ -174,8 +188,39 @@ function exerciseInstructions(exercise) {
   return [setup,"Set a stable stance and brace lightly before moving.","Move through the exercise's comfortable range with a smooth, controlled tempo.","Return to the start slowly and keep your joints aligned with the direction of movement.","Breathe steadily and stop if you feel sharp pain or lose control of the movement."];
 }
 
-function cardioDurationFor(exercise) {
+function cardioDifficultyForGoal(goal="") {
+  const value=String(goal).toLowerCase();
+  if (/very hard|extreme|all[\s-]?out|max(?:imum)? effort|race pace|elite|brutal|high intensity|\bhiit\b/.test(value)) return "very-hard";
+  if (/hard|intense|intensive|challeng(?:e|ing)|condition(?:ing)?|gas tank|work capacity|on[- ]the[- ]job|job requirements|physically demanding|tactical|firefighter|military|police|physical test|ruck|sprint|interval|threshold/.test(value)) return "hard";
+  if (/beginner|new to exercise|recovery|recover|easy|low impact|gentle|light|returning to exercise/.test(value)) return "easy";
+  return "moderate";
+}
+
+function cardioDifficultyName(difficulty) {
+  return ({easy:"Easy / recovery",moderate:"Moderate",hard:"Hard", "very-hard":"Very hard"})[difficulty]||"Moderate";
+}
+
+function cardioDifficultyForExercise(exercise) {
+  const value=String(exercise.id||"")+" "+String(exercise.name||"");
+  if(/hard|hiit|power.interval/i.test(value))return "hard";
+  if(/easy|recovery/i.test(value))return "easy";
+  return "moderate";
+}
+
+function cardioDifficultyHint(form) {
+  const suggested=cardioDifficultyForGoal(form.elements.goal.value);
+  const selected=form.elements.cardioDifficulty.value;
+  const hint=form.querySelector("#cardio-difficulty-hint");
+  if(!hint)return;
+  hint.textContent=selected==="auto"
+    ? `Goal wording suggests ${cardioDifficultyName(suggested)}. Hard sessions use sustained work intervals at RPE 8–9/10 with planned recovery; very hard means advanced efforts, not uncontrolled all-out sprints.`
+    : `Cardio is set to ${cardioDifficultyName(selected)}. You can change this here or on the saved plan.`;
+}
+
+function cardioDurationFor(exercise,difficulty="moderate") {
   const id=String(exercise.id||"").toLowerCase();
+  if(difficulty==="very-hard")return /long-run|hiking/.test(id)?40:/tempo/.test(id)?36:34;
+  if(difficulty==="hard")return /long-run|hiking/.test(id)?35:/tempo/.test(id)?33:30;
   if(/long-run|hiking/.test(id))return 35;
   if(/tempo/.test(id))return 30;
   if(/recovery/.test(id))return 20;
@@ -184,32 +229,47 @@ function cardioDurationFor(exercise) {
   return 25;
 }
 
-function cardioPrescription(exercise, duration=30) {
+function cardioPrescription(exercise, duration=30, difficulty="moderate") {
   if(exercise.pattern!=="conditioning")return null;
   const id=String(exercise.id||"").toLowerCase(),name=String(exercise.name||"").toLowerCase();
   const minutes=Math.max(10,Number(duration)||30);
   const recovery=/recovery/.test(id+" "+name),long=/long-run|hiking/.test(id+" "+name),tempo=/tempo/.test(id+" "+name),interval=/interval|run-walk|jump-rope/.test(id+" "+name),carry=/farmer-carry/.test(id+" "+name);
-  const warmup=recovery||carry?3:5,cooldown=recovery||carry?3:5,mainMinutes=Math.max(4,minutes-warmup-cooldown);
+  const intense=difficulty==="hard"||difficulty==="very-hard",veryHard=difficulty==="very-hard";
+  const warmup=recovery&&!intense||carry?3:5,cooldown=recovery&&!intense||carry?3:5,mainMinutes=Math.max(4,minutes-warmup-cooldown);
   let main;
   if(carry)main="4–6 carries of 30–45 seconds; walk or rest 60–90 seconds between carries.";
-  else if(/swim/.test(id+" "+name)&&interval)main="8 × 50 m: swim each length at RPE 6–7, then rest or easy-swim 20–30 seconds. Adjust the distance to your pool length.";
+  else if(/skierg/.test(id+" "+name)&&/power/.test(id+" "+name)){
+    const rounds=intense?Math.max(3,Math.min(veryHard?8:6,Math.floor(mainMinutes/3))):6;
+    main=intense?`${rounds} × 75 seconds powerful at RPE ${veryHard?"9":"8–9"}, with 105 seconds very easy between efforts. Drive down through the handles, then recover fully.`:"6 × 60 seconds strong at RPE 7, with 90 seconds easy between efforts.";
+  }
+  else if(/skierg/.test(id+" "+name)&&intense)main=`${Math.max(4,Math.floor(mainMinutes/2))} × 1 minute hard at RPE ${veryHard?"9":"8–9"}, with 1 minute very easy between efforts. Keep each pull crisp; reduce the pace if technique breaks down.`;
+  else if(/assault-bike/.test(id+" "+name)&&intense){const rounds=Math.max(4,Math.floor(mainMinutes/2.5));main=`${rounds} × 1 minute hard at RPE ${veryHard?"9":"8–9"}, with 90 seconds easy pedaling between efforts. Push and pull the handles smoothly; do not sprint beyond control.`;}
+  else if(/treadmill-hill/.test(id+" "+name)&&intense){const rounds=Math.max(3,Math.floor(mainMinutes/4));main=`${rounds} × 2 minutes uphill at RPE ${veryHard?9:8}, with 2 minutes easy walking at 1% incline. Keep the stride controlled and use the safety clip.`;}
+  else if(/swim/.test(id+" "+name)&&interval)main=intense?`${veryHard?12:10} × 50 m strong at RPE ${veryHard?9:8}, then rest or easy-swim 30–45 seconds. Adjust to pool length and keep stroke form smooth.`:"8 × 50 m: swim each length at RPE 6–7, then rest or easy-swim 20–30 seconds. Adjust the distance to your pool length.";
   else if(/swim/.test(id+" "+name))main=`Swim easily for ${mainMinutes} minutes, pausing briefly at the wall whenever needed.`;
   else if(/jump-rope/.test(id+" "+name)){
-    const rounds=Math.max(4,Math.floor(mainMinutes/1.5));
-    main=`${rounds} rounds of 30 seconds of relaxed jumping and 60 seconds of easy marching or rest.`;
+    const rounds=Math.max(4,Math.floor(mainMinutes/(intense?1.5:1.5)));
+    main=intense?`${rounds} rounds of 45 seconds fast, light-footed jumping at RPE ${veryHard?9:8}, then 45 seconds easy marching or rest.`:`${rounds} rounds of 30 seconds of relaxed jumping and 60 seconds of easy marching or rest.`;
   } else if(/run-walk/.test(id+" "+name)){
-    const rounds=Math.max(3,Math.floor(mainMinutes/3));
-    main=`${rounds} rounds of 1 minute easy jogging (RPE 5–6) and 2 minutes brisk walking (RPE 2–3).`;
+    const rounds=Math.max(3,Math.floor(mainMinutes/(intense?3:3)));
+    main=intense?`${rounds} rounds of 90 seconds running at RPE ${veryHard?9:8}, then 90 seconds easy jogging or brisk walking (RPE 2–3).`:`${rounds} rounds of 1 minute easy jogging (RPE 5–6) and 2 minutes brisk walking (RPE 2–3).`;
   } else if(interval){
     const rounds=Math.max(3,Math.floor(mainMinutes/2));
-    main=`${rounds} rounds of 1 minute strong (RPE 7) and 1 minute easy (RPE 2–3). Keep the hard efforts controlled, not all-out.`;
-  } else if(tempo)main=`3 rounds of 5 minutes at a comfortably hard RPE 6, with 2 minutes easy between rounds. Use the remaining time for relaxed steady movement.`;
+    main=intense?`${rounds} rounds of 1 minute hard (RPE ${veryHard?9:8}–9) and 1 minute easy (RPE 2–3). Keep every hard repetition strong and repeatable, not all-out.`:`${rounds} rounds of 1 minute strong (RPE 7) and 1 minute easy (RPE 2–3). Keep the hard efforts controlled, not all-out.`;
+  } else if(tempo)main=intense?`3 rounds of 6 minutes at RPE ${veryHard?"8–9":"8"}, with 2 minutes easy between rounds. Use any remaining time at a relaxed steady pace.`:`3 rounds of 5 minutes at a comfortably hard RPE 6, with 2 minutes easy between rounds. Use the remaining time for relaxed steady movement.`;
+  else if(intense){
+    const rounds=Math.max(2,Math.floor(mainMinutes/6));
+    main=`${rounds} rounds of 4 minutes strong at RPE ${veryHard?"8–9":"8"}, then 2 minutes easy at RPE 2–3. Stay smooth and consistent across every effort.`;
+  }
   else if(long)main=`Stay at an easy conversational effort (RPE 3–4) for ${mainMinutes} minutes. Slow down or take short walk breaks as needed.`;
   else if(recovery)main=`Keep ${mainMinutes} minutes very easy (RPE 2–3); you should be able to speak in full sentences throughout.`;
   else main=`Hold a steady, conversational effort (RPE 3–5) for ${mainMinutes} minutes. You should be able to speak in full sentences.`;
 
   let settings;
-  if(/treadmill-incline/.test(id))settings="Walking: start around 3% incline and 2.5–3.5 mph, then adjust speed so effort stays at the target RPE. Keep the rails for balance only.";
+  if(/skierg/.test(id))settings="Concept2 SkiErg: set the damper around 3–5 (or drag factor about 100–130); the damper is not a resistance gear. Build effort with a quick hip hinge and strong downward pulls, then return easily. If your unit uses levels, begin near the middle and adjust by RPE.";
+  else if(/assault-bike/.test(id))settings="Air bike: use a smooth cadence and both moving handles; there is no fixed resistance setting. Raise cadence and handle drive for work intervals, then pedal gently for recovery.";
+  else if(/treadmill-hill/.test(id))settings="Set uphill repeats around 5–8% incline and an easy walk recovery at 1%. Adjust speed to stay within the prescribed RPE; attach the safety clip and avoid holding the rails.";
+  else if(/treadmill-incline/.test(id))settings="Walking: start around 3% incline and 2.5–3.5 mph, then adjust speed so effort stays at the target RPE. Keep the rails for balance only.";
   else if(/treadmill/.test(id))settings="Running: begin at 0–1% incline and choose a pace by RPE, not a fixed speed. Use a walk pace for recoveries.";
   else if(/bike/.test(id))settings="Aim for 70–90 rpm. Start easy at resistance 2–4/10; for hard intervals use about 5–7/10 and reduce to 2–3/10 for recovery.";
   else if(/elliptical/.test(id))settings="Use a smooth stride. Start around resistance 3–5/10; raise to 6–8/10 only for hard intervals, then return to 2–4/10.";
@@ -222,14 +282,15 @@ function cardioPrescription(exercise, duration=30) {
   else if(/dance|shadowboxing/.test(id))settings="Use a clear floor and keep the movement low-impact if needed; work at RPE 4–6 and stay able to control each step.";
   else settings="Use low-impact movements at a pace you can control; aim for RPE 3–5 and take short breaks before form changes.";
 
-  return {duration:minutes,warmup:`${warmup} minutes easy, gradually building pace`,main,cooldown:`${cooldown} minutes very easy, gradually slowing down`,intensity:interval?"Hard portions RPE 7/10; recovery portions RPE 2–3/10.":tempo?"Work portions RPE 6/10; easy portions RPE 2–3/10.":recovery?"RPE 2–3/10. Keep this session restorative.":"Steady portions RPE 3–5/10; keep breathing controlled.",settings};
+  const intensity=intense?`Work portions RPE ${veryHard?"9":"8–9"}/10; recovery portions RPE 2–3/10. Finish feeling challenged but in control.`:interval?"Hard portions RPE 7/10; recovery portions RPE 2–3/10.":tempo?"Work portions RPE 6/10; easy portions RPE 2–3/10.":recovery?"RPE 2–3/10. Keep this session restorative.":"Steady portions RPE 3–5/10; keep breathing controlled.";
+  return {duration:minutes,difficulty:cardioDifficultyName(difficulty),warmup:`${warmup} minutes easy, gradually building pace`,main,cooldown:`${cooldown} minutes very easy, gradually slowing down`,intensity,settings};
 }
 
-function cardioPrescriptionMarkup(exercise,duration=30,compact=false) {
-  const plan=cardioPrescription(exercise,duration);
+function cardioPrescriptionMarkup(exercise,duration=30,compact=false,difficulty="moderate") {
+  const plan=cardioPrescription(exercise,duration,difficulty);
   if(!plan)return "";
   const content=`<div><strong>Warm-up</strong><span>${escapeHTML(plan.warmup)}</span></div><div><strong>Main set</strong><span>${escapeHTML(plan.main)}</span></div><div><strong>Cool-down</strong><span>${escapeHTML(plan.cooldown)}</span></div><div><strong>Effort</strong><span>${escapeHTML(plan.intensity)}</span></div><div><strong>Settings</strong><span>${escapeHTML(plan.settings)}</span></div>`;
-  return `<section class="cardio-prescription${compact?" compact":""}"><div class="row"><strong>${compact?"Cardio target":"Suggested cardio session"}</strong><span class="badge">${plan.duration} min</span></div><div class="cardio-prescription-grid">${content}</div></section>`;
+  return `<section class="cardio-prescription${compact?" compact":""}"><div class="row"><strong>${compact?"Cardio target":"Suggested cardio session"}</strong><span class="badge">${escapeHTML(plan.difficulty)} · ${plan.duration} min</span></div><div class="cardio-prescription-grid">${content}</div></section>`;
 }
 
 function withExerciseDetails(exercise) {
@@ -475,6 +536,10 @@ function normalizePlans() {
       plan.includeCardio = plan.days.some(day => day.items.some(item => item.exercise.pattern === "conditioning"));
       migrated = true;
     }
+    if (!["easy","moderate","hard","very-hard"].includes(plan.cardioDifficulty)) {
+      plan.cardioDifficulty = "moderate";
+      migrated = true;
+    }
   });
   if (migrated) persist();
 }
@@ -640,7 +705,18 @@ function focusFor(text) {
   return muscles.filter(muscle => (aliases[muscle] || [label(muscle).toLowerCase()]).some(word => value.includes(word)));
 }
 
-function makePlan({goal, target, split, count, variation, gear, focus, weekdays = defaultWeeklyDays(count), scheduledDates = [], includeCardio = false, startIndex = 0}) {
+function cardioPreferenceScore(exercise,difficulty) {
+  const id=String(exercise.id||"").toLowerCase(),name=String(exercise.name||"").toLowerCase();
+  if(exercise.pattern!=="conditioning")return 0;
+  const interval=/(interval|tempo|hill|hiit|power|sprint|threshold)/.test(id+" "+name);
+  const gentle=/(easy|recovery|walk|steady|long-run|hiking)/.test(id+" "+name);
+  if(difficulty==="hard")return (interval?8:0)-(gentle?8:0);
+  if(difficulty==="very-hard")return (interval?10:0)-(gentle?10:0);
+  if(difficulty==="easy")return (gentle?8:0)-(interval?8:0);
+  return gentle?2:0;
+}
+
+function makePlan({goal, target, split, count, variation, gear, focus, weekdays = defaultWeeklyDays(count), scheduledDates = [], includeCardio = false, startIndex = 0, cardioDifficulty = "moderate"}) {
   const days = [];
   const use = {};
   const wantsCardio = split === "Cardio" || includeCardio || target === "Improve endurance";
@@ -654,21 +730,21 @@ function makePlan({goal, target, split, count, variation, gear, focus, weekdays 
       const pool = available.filter(exercise => exercise.pattern === pattern && !used.has(exercise.id));
       if (!pool.length) return;
       pool.sort((a, b) => {
-        const aScore = a.muscles.filter(muscle => focus.includes(muscle)).length * 3 - (use[a.id] || 0);
-        const bScore = b.muscles.filter(muscle => focus.includes(muscle)).length * 3 - (use[b.id] || 0);
+        const aScore = a.muscles.filter(muscle => focus.includes(muscle)).length * 3 + cardioPreferenceScore(a,cardioDifficulty) - (use[a.id] || 0);
+        const bScore = b.muscles.filter(muscle => focus.includes(muscle)).length * 3 + cardioPreferenceScore(b,cardioDifficulty) - (use[b.id] || 0);
         return bScore - aScore || a.name.localeCompare(b.name);
       });
       const picked = pool[(variation * 5 + index * 3 + slot) % pool.length];
       used.add(picked.id);
       use[picked.id] = (use[picked.id] || 0) + 1;
       const timed = pattern === "conditioning" || /plank|hold|wall sit/i.test(picked.name);
-      const minutes = pattern === "conditioning" ? cardioDurationFor(picked) : 0;
+      const minutes = pattern === "conditioning" ? cardioDurationFor(picked,cardioDifficulty) : 0;
       const reps = pattern === "conditioning" ? minutes : timed ? 30 : target === "Get stronger" ? 5 : target === "Build muscle" ? 10 : 10;
       items.push({id: uid(), exercise: picked, sets: pattern === "conditioning" ? 1 : timed ? 3 : target === "Improve endurance" ? 2 : target === "General fitness" ? 2 : 3, reps});
     });
     days.push({id: uid(), name: `Day ${index + 1} · ${name}`, weekday: weekdays[index] || defaultWeeklyDays(count)[index], scheduledDate: scheduledDates[index] || null, items});
   }
-  return {id: uid(), goal, target, split, focus, includeCardio: includeCardio || (split !== "Cardio" && target === "Improve endurance"), days};
+  return {id: uid(), goal, target, split, focus, cardioDifficulty, includeCardio: includeCardio || (split !== "Cardio" && target === "Improve endurance"), days};
 }
 
 function checkedOptions(options, selected, group) {
@@ -689,6 +765,7 @@ function openBuilder(draft = {}) {
       <div id="schedule-preview" class="schedule-preview"></div>
     </div>
     <div class="field"><label>Variation</label><select name="variation">${[1,2,3,4].map((n,i)=>`<option value="${i}">Variation ${n}</option>`).join("")}</select></div>
+    <div class="field"><label for="plan-cardio-difficulty">Cardio difficulty</label><select id="plan-cardio-difficulty" name="cardioDifficulty"><option value="auto">Auto-detect from goal wording</option><option value="easy">Easy / recovery</option><option value="moderate">Moderate</option><option value="hard">Hard</option><option value="very-hard">Very hard</option></select><span id="cardio-difficulty-hint" class="subtle"></span></div>
     <div class="field"><span class="field-label">Equipment you can use</span>${checkedOptions(gearOptions,["bodyweight","dumbbells"],"gear")}</div>
     <div class="field"><label class="check-option"><input type="checkbox" name="includeCardio" value="1"><span>Mix cardio into strength days</span></label><span class="subtle">Adds a cardio block alongside the weights so you can work on both.</span></div>
     <div class="modal-actions"><button class="button soft" type="button" data-close>Cancel</button><button class="button primary" type="submit">Preview plan</button></div>
@@ -698,7 +775,9 @@ function openBuilder(draft = {}) {
     for (const key of ["goal", "target", "split", "variation"]) form.elements[key].value = draft[key];
     for (const option of form.querySelectorAll('[name="gear"]')) option.checked = draft.gear.includes(option.value);
     form.elements.includeCardio.checked = draft.includeCardio;
+    form.elements.cardioDifficulty.value = draft.cardioDifficulty || "auto";
   }
+  cardioDifficultyHint(form);
   updateBuilderSchedule(form);
 }
 
@@ -761,7 +840,8 @@ function lastExerciseSummary(exerciseId) {
 function previewPlan(plan, draft) {
   const cardioNote = plan.includeCardio && plan.split !== "Cardio" ? " · cardio included on strength days" : "";
   const schedule = plan.calendarStart ? "Sessions follow your availability calendar in order." : `Repeats weekly on ${scheduleLabel(plan.days)}.`;
-  showModal("Plan preview", `<p class="subtle">${escapeHTML(plan.goal)} · ${escapeHTML(plan.target)} · ${escapeHTML(plan.split)}${cardioNote}</p><p class="subtle">${escapeHTML(schedule)}</p>${plan.days.map(day => `<div class="card"><div class="row"><strong>${escapeHTML(day.name)}</strong><span class="badge">${escapeHTML(day.scheduledDate ? displayDate(day.scheduledDate) : day.weekday)}</span></div>${day.items.map(item=>`<div class="exercise-row"><div><div class="exercise-title">${escapeHTML(item.exercise.name)}</div><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div>${item.exercise.pattern==="conditioning"?cardioPrescriptionMarkup(item.exercise,item.reps,true):""}</div></div>`).join("")}</div>`).join("")}<div class="modal-actions"><button class="button soft" data-action="edit-preview">Back</button><button class="button primary" data-action="save-preview">Save plan</button></div>`, {plan});
+  const cardioLabel=plan.days.some(day=>day.items.some(item=>item.exercise.pattern==="conditioning"))?`<p class="subtle">Cardio intensity: <strong>${escapeHTML(cardioDifficultyName(plan.cardioDifficulty))}</strong></p>`:"";
+  showModal("Plan preview", `<p class="subtle">${escapeHTML(plan.goal)} · ${escapeHTML(plan.target)} · ${escapeHTML(plan.split)}${cardioNote}</p><p class="subtle">${escapeHTML(schedule)}</p>${cardioLabel}${plan.days.map(day => `<div class="card"><div class="row"><strong>${escapeHTML(day.name)}</strong><span class="badge">${escapeHTML(day.scheduledDate ? displayDate(day.scheduledDate) : day.weekday)}</span></div>${day.items.map(item=>`<div class="exercise-row"><div><div class="exercise-title">${escapeHTML(item.exercise.name)}</div><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div>${item.exercise.pattern==="conditioning"?cardioPrescriptionMarkup(item.exercise,item.reps,true,plan.cardioDifficulty):""}</div></div>`).join("")}</div>`).join("")}<div class="modal-actions"><button class="button soft" data-action="edit-preview">Back</button><button class="button primary" data-action="save-preview">Save plan</button></div>`, {plan});
   modal._builderDraft = draft;
 }
 
@@ -772,12 +852,14 @@ function renderPlanDetail(plan) {
   const nextDate = dates.filter(Boolean).sort()[0];
   const schedule = follows ? (nextDate ? `Next session ${displayDate(nextDate)}` : "Add available dates to schedule more sessions.") : scheduleLabel(plan.days);
   const sessions = plan.days.length === 1 ? "1 session" : `${plan.days.length} sessions`;
+  const hasCardio=plan.days.some(day=>day.items.some(item=>item.exercise.pattern==="conditioning"));
   app.innerHTML = `<button class="text-button" data-action="back-plans">‹ All plans</button>${heading(plan.goal, `${plan.target} · ${plan.split} · ${sessions}${follows ? " in rotation" : " per week"}${cardioNote}`)}
     <div class="card"><div class="row"><div><span class="eyebrow">${follows ? "Follows your calendar" : "Repeats every week"}</span><p class="subtle" style="margin:6px 0 0">${escapeHTML(schedule)}</p></div><button class="button small soft" data-action="edit-schedule">Edit days</button></div></div>
+    ${hasCardio?`<div class="card cardio-intensity-setting"><div><span class="eyebrow">Cardio effort</span><p class="subtle" style="margin:5px 0 0">Adjusts interval pace, work time, recovery, and machine settings for cardio sessions in this plan.</p></div><select aria-label="Cardio difficulty" data-plan-cardio-difficulty="${escapeHTML(plan.id)}">${["easy","moderate","hard","very-hard"].map(value=>`<option value="${value}" ${plan.cardioDifficulty===value?"selected":""}>${escapeHTML(cardioDifficultyName(value))}</option>`).join("")}</select></div>`:""}
     <div class="card"><span class="eyebrow">Recovery option</span><h2 class="section-title" style="margin:6px 0">Missed a workout?</h2><p class="subtle">Choose the session you missed and how many sessions you can still fit in. The new schedule skips that session and keeps your original plan.</p><button class="button soft" data-action="missed">Adjust this week</button></div>
     ${plan.days.map((day, index)=>`<section class="card"><div class="row"><div><span class="badge">${escapeHTML(dates[index] ? displayDate(dates[index]) : follows ? "Unscheduled" : day.weekday || "Unscheduled")}</span><p class="eyebrow" style="margin:8px 0 0">${escapeHTML(day.name)}</p><p class="subtle">${day.items.length} exercises</p></div><button class="button small primary" data-log-day="${escapeHTML(day.id)}" data-plan-id="${escapeHTML(plan.id)}" data-scheduled-for="${escapeHTML(dates[index]||"")}">Log session</button></div>
       ${muscleMap(day.items.map(item=>item.exercise),day)}
-      ${day.items.map(item=>`<div class="day-exercise"><div class="row"><div class="day-exercise-copy"><button type="button" class="exercise-title-button" data-view-exercise="${escapeHTML(item.exercise.id)}" aria-label="View ${escapeHTML(item.exercise.name)} profile">${escapeHTML(item.exercise.name)}</button><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div><div class="subtle day-exercise-last">${escapeHTML(lastExerciseSummary(item.exercise.id))}</div></div><button class="text-button" data-swap="${escapeHTML(item.id)}" data-day="${escapeHTML(day.id)}">Swap</button></div>${item.exercise.pattern==="conditioning"?cardioPrescriptionMarkup(item.exercise,item.reps,true):""}<div class="row plan-set-controls" style="justify-content:flex-start;margin-top:8px"><span class="subtle">Sets</span>${stepper(item.sets,`sets:${day.id}:${item.id}`)}<span class="subtle">${item.exercise.pattern === "conditioning" ? "Minutes" : /plank|hold|wall sit/i.test(item.exercise.name) ? "Seconds" : "Reps"}</span>${stepper(item.reps,`reps:${day.id}:${item.id}`)}</div></div>`).join("")}
+      ${day.items.map(item=>`<div class="day-exercise"><div class="row"><div class="day-exercise-copy"><button type="button" class="exercise-title-button" data-view-exercise="${escapeHTML(item.exercise.id)}" aria-label="View ${escapeHTML(item.exercise.name)} profile">${escapeHTML(item.exercise.name)}</button><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div><div class="subtle day-exercise-last">${escapeHTML(lastExerciseSummary(item.exercise.id))}</div></div><button class="text-button" data-swap="${escapeHTML(item.id)}" data-day="${escapeHTML(day.id)}">Swap</button></div>${item.exercise.pattern==="conditioning"?cardioPrescriptionMarkup(item.exercise,item.reps,true,plan.cardioDifficulty):""}<div class="row plan-set-controls" style="justify-content:flex-start;margin-top:8px"><span class="subtle">Sets</span>${stepper(item.sets,`sets:${day.id}:${item.id}`)}<span class="subtle">${item.exercise.pattern === "conditioning" ? "Minutes" : /plank|hold|wall sit/i.test(item.exercise.name) ? "Seconds" : "Reps"}</span>${stepper(item.reps,`reps:${day.id}:${item.id}`)}</div></div>`).join("")}
       <button class="text-button" data-add-exercise="${escapeHTML(day.id)}">＋ Add exercise</button></section>`).join("")}
     <button class="button danger full" data-action="delete-plan">Delete this plan</button>`;
 }
@@ -912,7 +994,7 @@ function openExerciseProfile(exercise,context=null) {
     <section class="exercise-profile-card"><span class="eyebrow">Quick info</span><p class="exercise-meta">${escapeHTML(exerciseSummary(selected))}</p></section>
     <section class="exercise-profile-card"><strong>Specific equipment</strong><p>${escapeHTML(details.specificEquipment)}</p></section>
     <section><h3 class="section-title">How to do it</h3><ol class="exercise-instructions">${details.instructions.map(step=>`<li>${escapeHTML(step)}</li>`).join("")}</ol><p class="exercise-safety">Start with a light load or easy pace while learning the movement. Keep each rep controlled and stop if you feel sharp pain or dizziness.</p></section>
-    ${details.cardioPlan?cardioPrescriptionMarkup(selected,cardioDurationFor(selected)):""}
+    ${details.cardioPlan?cardioPrescriptionMarkup(selected,cardioDurationFor(selected,cardioDifficultyForExercise(selected)),false,cardioDifficultyForExercise(selected)):""}
     <section><h3 class="section-title">Muscles worked</h3>${muscleMap([selected])}</section>
     <div class="modal-actions">${actions}</div>
   </div>`);
@@ -1278,6 +1360,7 @@ document.addEventListener("click", event => {
 document.addEventListener("input", event => {
   if(event.target.id==="library-search"){librarySearch=event.target.value;drawLibraryResults();}
   if(event.target.id==="picker-search"){const query=event.target.value;modal.dataset.pickerQuery=query;const day=modal.dataset.pickerDay;modal.querySelector("#picker-results").innerHTML=pickerResults(query,day,modal.dataset.pickerSwap);}
+  if(event.target.id==="goal-text")cardioDifficultyHint(event.target.form);
   if (["plan-start-date", "plan-follow-calendar"].includes(event.target.id)) updateBuilderSchedule(event.target.form);
   if (["availability-type", "availability-duration", "availability-start", "cycle-length"].includes(event.target.id)) updateAvailabilityEditor(event.target.form);
   if (event.target.id === "plan-schedule-type") updateScheduleEditor(event.target.form);
@@ -1289,6 +1372,11 @@ document.addEventListener("input", event => {
 
 document.addEventListener("change",event=>{
   if(event.target.id==="progress-exercise"){progressExerciseId=event.target.value;renderProgress();}
+  if(event.target.name==="cardioDifficulty"&&event.target.form?.id==="plan-form")cardioDifficultyHint(event.target.form);
+  if(event.target.dataset.planCardioDifficulty){
+    const plan=getPlan(event.target.dataset.planCardioDifficulty);
+    if(plan){plan.cardioDifficulty=event.target.value;plan.days.forEach(day=>day.items.forEach(item=>{if(item.exercise.pattern==="conditioning")item.reps=cardioDurationFor(item.exercise,plan.cardioDifficulty);}));saveAndRender(`Cardio intensity changed to ${cardioDifficultyName(plan.cardioDifficulty)}.`);}
+  }
   if(event.target.form?.id==="workout-form"&&event.target.name==="weightUnit"){
     const next=event.target.value,previous=workoutWeightUnit;
     if(next!==previous){
@@ -1331,12 +1419,13 @@ document.addEventListener("submit", event => {
     const draft = {
       goal: String(values.get("goal")).trim(), target: values.get("target"), split: values.get("split"),
       variation: Number(values.get("variation")), startDate: values.get("startDate"), gear: values.getAll("gear"),
-      includeCardio: values.has("includeCardio"), followsCalendar: values.has("followsCalendar")
+      includeCardio: values.has("includeCardio"), followsCalendar: values.has("followsCalendar"), cardioDifficulty: values.get("cardioDifficulty")
     };
     const scheduledDates = builderDates(draft.startDate, draft.followsCalendar);
     if (!scheduledDates.length) { toast("Choose a start date with available training days."); return; }
     const {goal, split, includeCardio, variation} = draft;
     const target = draft.target === "auto" ? targetFor(goal) : draft.target;
+    const cardioDifficulty=draft.cardioDifficulty==="auto"?cardioDifficultyForGoal(goal):draft.cardioDifficulty;
     const gear = new Set(draft.gear);
     if (!gear.size && split !== "Cardio") { toast("Choose at least one option for the strength exercises."); return; }
     if (split === "Cardio" || includeCardio || target === "Improve endurance") {
@@ -1344,7 +1433,7 @@ document.addEventListener("submit", event => {
       gear.add("cardio");
     }
     const weekdays = scheduledDates.map(weekdayForDate);
-    const plan = makePlan({goal, target, split, count:weekdays.length, variation, gear:[...gear], focus:focusFor(goal), weekdays, scheduledDates, includeCardio});
+    const plan = makePlan({goal, target, split, count:weekdays.length, variation, gear:[...gear], focus:focusFor(goal), weekdays, scheduledDates, includeCardio, cardioDifficulty});
     if (draft.followsCalendar) plan.calendarStart = draft.startDate;
     previewPlan(plan, draft);
   }
@@ -1353,7 +1442,7 @@ document.addEventListener("submit", event => {
     if(!plan||missedIndex<0)return;
     const gear=[...new Set(plan.days.flatMap(day=>day.items.map(item=>item.exercise.gear)))];
     const remaining=Number(values.get("remaining"));const orderedDays=[...plan.days.slice(missedIndex+1),...plan.days.slice(0,missedIndex)];const recoveryWeekdays=orderedDays.length>=remaining?orderedDays.slice(0,remaining).map(day=>day.weekday):defaultWeeklyDays(remaining);
-    const recovery=makePlan({goal:`Back on track · ${plan.goal}`,target:plan.target,split:plan.split,count:remaining,variation:1,gear:gear.length?gear:["bodyweight"],focus:plan.focus,weekdays:recoveryWeekdays,includeCardio:plan.includeCardio,startIndex:missedIndex+1});
+    const recovery=makePlan({goal:`Back on track · ${plan.goal}`,target:plan.target,split:plan.split,count:remaining,variation:1,gear:gear.length?gear:["bodyweight"],focus:plan.focus,weekdays:recoveryWeekdays,includeCardio:plan.includeCardio,startIndex:missedIndex+1,cardioDifficulty:plan.cardioDifficulty||"moderate"});
     recovery.createdAt=new Date().toISOString();
     if (plan.calendarStart) {
       const today = dateKey(new Date());

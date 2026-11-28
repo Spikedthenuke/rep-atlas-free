@@ -2060,5 +2060,74 @@
       "quads",
       "glutes"
     ]
+  },
+  {
+    "id": "skierg-intervals",
+    "name": "SkiErg Hard Intervals",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": ["lats", "abs", "shoulders", "triceps", "quads", "glutes"],
+    "primaryMuscles": ["lats", "abs"],
+    "secondaryMuscles": ["shoulders", "triceps", "quads", "glutes"],
+    "description": "Hard repeatable ski-pull intervals on a SkiErg to develop upper-body endurance, trunk control, and full-body aerobic power."
+  },
+  {
+    "id": "skierg-power-intervals",
+    "name": "SkiErg Power Intervals",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": ["lats", "abs", "shoulders", "triceps", "quads", "glutes"],
+    "primaryMuscles": ["lats", "abs"],
+    "secondaryMuscles": ["shoulders", "triceps", "quads", "glutes"],
+    "description": "Shorter powerful SkiErg repeats with full recovery, focused on producing strong, technically clean pulls under fatigue."
+  },
+  {
+    "id": "skierg-steady",
+    "name": "SkiErg Steady Session",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": ["lats", "abs", "shoulders", "triceps", "quads", "glutes"],
+    "primaryMuscles": ["lats", "abs"],
+    "secondaryMuscles": ["shoulders", "triceps", "quads", "glutes"],
+    "description": "Continuous SkiErg work at a sustainable pace to build aerobic capacity and efficient ski-pull technique."
+  },
+  {
+    "id": "assault-bike-intervals",
+    "name": "Air Bike Hard Intervals",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": ["quads", "glutes", "shoulders", "abs"],
+    "primaryMuscles": ["quads", "glutes"],
+    "secondaryMuscles": ["shoulders", "abs"],
+    "description": "Repeatable high-effort intervals on an air bike, using both the pedals and moving handles to build whole-body conditioning."
+  },
+  {
+    "id": "treadmill-hill-repeats",
+    "name": "Treadmill Hill Repeats",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": ["quads", "glutes", "calves"],
+    "primaryMuscles": ["glutes", "quads"],
+    "secondaryMuscles": ["calves"],
+    "description": "Uphill work intervals with easy walking recovery to develop leg strength endurance and cardiovascular capacity."
+  },
+  {
+    "id": "rowing-power-intervals",
+    "name": "Rowing Machine Power Intervals",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": ["lats", "quads", "glutes", "abs", "shoulders"],
+    "primaryMuscles": ["lats", "quads", "glutes"],
+    "secondaryMuscles": ["abs", "shoulders"],
+    "description": "Strong rowing repeats focused on leg drive, a braced trunk, and a smooth finish to build full-body work capacity."
+  },
+  {
+    "id": "stair-climber-hiit",
+    "name": "Stair Climber Hard Intervals",
+    "pattern": "conditioning",
+    "gear": "cardio",
+    "muscles": ["quads", "glutes", "calves"],
+    "primaryMuscles": ["quads", "glutes"],
+    "secondaryMuscles": ["calves"]
   }
 ]

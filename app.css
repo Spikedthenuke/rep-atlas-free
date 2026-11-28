@@ -486,6 +486,8 @@ main {
 .cardio-prescription.compact { padding: 9px 10px; gap: 7px; font-size: 12px }
 .cardio-prescription.compact .cardio-prescription-grid { gap: 6px }
 .cardio-prescription.compact .cardio-prescription-grid > div { grid-template-columns: 72px minmax(0,1fr); gap: 6px }
+.cardio-intensity-setting { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,220px); gap: 12px; align-items: center }
+.cardio-intensity-setting select { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 11px; padding: 11px 12px; background: var(--paper); color: var(--ink); font: inherit }
 
 .history-exercise-button {
   display: flex;
@@ -947,6 +949,7 @@ main {
 .toast { width: max-content; max-width: calc(100% - 24px); text-align: center }
 
 @media (max-width: 639px) {
+  .cardio-intensity-setting { grid-template-columns: minmax(0,1fr) }
   main {
     padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
   }
