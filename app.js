@@ -676,154 +676,55 @@ function stepper(value, key) { return `<span class="stepper"><button type="butto
 
 function muscleMap(values) {
   const active = new Set(values);
+  const pair = d => [{d}, {d, mirror:true}];
   const regions = {
     front: {
-      shoulders: [
-        'M51 49 C46 49 41 52 39 57 C37 62 39 67 44 70 C48 65 51 60 56 57 C55 53 54 50 51 49Z',
-        'M89 49 C94 49 99 52 101 57 C103 62 101 67 96 70 C92 65 89 60 84 57 C85 53 86 50 89 49Z'
+      shoulders:pair('M48 49 C42 48 37 52 35 58 C34 64 38 69 44 72 C49 66 53 60 59 56 C57 52 53 50 48 49Z'),
+      chest:pair('M56 62 C61 59 67 60 70 63 L70 78 C64 81 58 78 54 73 C52 69 53 65 56 62Z'),
+      biceps:pair('M39 67 C43 65 47 68 48 73 L44 84 L38 96 C34 95 32 92 32 88 L35 76Z'),
+      triceps:pair('M37 69 C34 74 32 81 30 88 L27 98 Q30 101 34 99 L41 84 L45 73Z'),
+      forearms:pair('M29 95 Q33 98 37 96 L32 108 L27 117 Q23 119 21 115 L24 106Z'),
+      abs:[
+        'M62 81 Q66 80 69 82 L69 91 Q65 93 62 91Z','M71 82 Q74 80 78 81 L78 91 Q74 93 71 91Z',
+        'M62 94 Q66 95 69 93 L69 102 Q65 104 62 102Z','M71 93 Q74 95 78 94 L78 102 Q74 104 71 102Z',
+        'M63 105 Q66 106 69 104 L69 113 Q66 115 63 113Z','M71 104 Q74 106 77 105 L77 113 Q74 115 71 113Z'
       ],
-      chest: [
-        'M55 59 C60 56 66 57 69 60 L69 75 C63 78 57 76 53 72 C51 68 52 63 55 59Z',
-        'M85 59 C80 56 74 57 71 60 L71 75 C77 78 83 76 87 72 C89 68 88 63 85 59Z'
-      ],
-      biceps: [
-        'M37 66 C41 64 45 67 46 72 L42 84 L35 96 C31 95 29 92 29 88 L33 75Z',
-        'M103 66 C99 64 95 67 94 72 L98 84 L105 96 C109 95 111 92 111 88 L107 75Z'
-      ],
-      triceps: [
-        'M35 68 C32 73 30 81 27 88 L24 97 Q27 101 31 100 L38 84 L42 72Z',
-        'M105 68 C108 73 110 81 113 88 L116 97 Q113 101 109 100 L102 84 L98 72Z'
-      ],
-      forearms: [
-        'M27 96 Q31 98 35 96 L30 108 L24 118 Q20 120 18 116 L22 106Z',
-        'M113 96 Q109 98 105 96 L110 108 L116 118 Q120 120 122 116 L118 106Z'
-      ],
-      abs: [
-        'M60 79 Q65 78 69 80 L69 89 Q64 91 60 89Z', 'M71 80 Q75 78 80 79 L80 89 Q76 91 71 89Z',
-        'M60 91 Q65 92 69 90 L69 100 Q64 102 60 100Z', 'M71 90 Q75 92 80 91 L80 100 Q76 102 71 100Z',
-        'M61 102 Q65 103 69 101 L69 110 Q65 112 62 110Z', 'M71 101 Q75 103 79 102 L78 110 Q75 112 71 110Z'
-      ],
-      obliques: [
-        'M49 75 Q54 77 58 80 L58 108 Q54 114 49 117 C52 103 50 90 49 75Z',
-        'M91 75 Q86 77 82 80 L82 108 Q86 114 91 117 C88 103 90 90 91 75Z'
-      ],
-      quads: [
-        'M53 143 Q59 146 66 150 L65 168 Q62 182 59 196 Q55 201 51 196 L47 181 Q47 170 51 159Z',
-        'M68 151 Q69 150 70 150 L69 184 Q67 195 63 199 Q59 198 59 193 L64 167Z',
-        'M87 143 Q81 146 74 150 L75 168 Q78 182 81 196 Q85 201 89 196 L93 181 Q93 170 89 159Z',
-        'M72 151 Q71 150 70 150 L71 184 Q73 195 77 199 Q81 198 81 193 L76 167Z'
-      ],
-      calves: [
-        'M48 195 Q53 198 58 197 C57 207 54 217 53 226 L49 236 Q45 239 42 236 L44 224 Q44 211 46 203Z',
-        'M92 195 Q87 198 82 197 C83 207 86 217 87 226 L91 236 Q95 239 98 236 L96 224 Q96 211 94 203Z'
-      ]
+      obliques:pair('M50 77 Q55 79 59 82 L59 111 Q55 117 50 120 C52 105 51 91 50 77Z'),
+      quads:[...pair('M51 126 C57 123 64 125 68 131 L66 151 C64 163 61 174 57 179 Q51 179 48 173 L47 149 Q47 136 51 126Z'),...pair('M68 132 Q69 129 70 129 L70 162 Q68 174 64 178 Q61 175 62 168 L65 151Z')],
+      calves:pair('M49 178 Q54 181 59 178 C58 190 55 202 54 212 L50 229 Q46 232 43 229 L45 213 Q46 198 47 188Z')
     },
     back: {
-      shoulders: [
-        'M51 49 C46 49 41 52 39 57 C37 62 39 67 44 70 C48 65 51 60 56 57 C55 53 54 50 51 49Z',
-        'M89 49 C94 49 99 52 101 57 C103 62 101 67 96 70 C92 65 89 60 84 57 C85 53 86 50 89 49Z'
-      ],
-      triceps: [
-        'M39 66 C35 65 32 69 31 75 L27 89 Q27 95 31 98 L37 91 L43 74Z',
-        'M101 66 C105 65 108 69 109 75 L113 89 Q113 95 109 98 L103 91 L97 74Z'
-      ],
-      biceps: [
-        'M38 68 Q42 66 45 70 L41 83 L35 94 Q31 94 29 91 L33 76Z',
-        'M102 68 Q98 66 95 70 L99 83 L105 94 Q109 94 111 91 L107 76Z'
-      ],
-      forearms: [
-        'M27 96 Q31 99 35 96 L30 108 L24 118 Q20 120 18 116 L22 106Z',
-        'M113 96 Q109 99 105 96 L110 108 L116 118 Q120 120 122 116 L118 106Z'
-      ],
-      traps: [
-        'M63 45 Q70 51 77 45 L86 51 Q83 60 78 69 L70 76 L62 69 Q57 60 54 51Z'
-      ],
-      lats: [
-        'M54 69 Q61 73 68 78 L68 111 Q63 119 56 123 Q52 106 49 90 Q48 78 54 69Z',
-        'M86 69 Q79 73 72 78 L72 111 Q77 119 84 123 Q88 106 91 90 Q92 78 86 69Z'
-      ],
-      lowerBack: [
-        'M63 83 Q67 85 69 85 L69 124 Q65 130 60 129 Q63 112 62 98Z',
-        'M77 83 Q73 85 71 85 L71 124 Q75 130 80 129 Q77 112 78 98Z'
-      ],
-      glutes: [
-        'M52 135 Q61 132 69 137 L69 153 Q64 159 57 159 Q49 156 47 148 Q47 140 52 135Z',
-        'M88 135 Q79 132 71 137 L71 153 Q76 159 83 159 Q91 156 93 148 Q93 140 88 135Z'
-      ],
-      hamstrings: [
-        'M51 158 Q59 160 67 155 L65 180 Q63 192 57 198 Q50 198 47 192 Q44 185 46 176Z',
-        'M89 158 Q81 160 73 155 L75 180 Q77 192 83 198 Q90 198 93 192 Q96 185 94 176Z',
-        'M68 157 Q69 159 70 159 Q71 159 72 157 L71 188 Q70 194 70 196 Q69 194 69 188Z'
-      ],
-      calves: [
-        'M49 197 Q54 199 59 196 C58 208 54 218 53 226 L49 236 Q45 239 42 236 L44 224 Q45 210 47 203Z',
-        'M91 197 Q86 199 81 196 C82 208 86 218 87 226 L91 236 Q95 239 98 236 L96 224 Q95 210 93 203Z'
-      ],
-      obliques: [
-        'M51 86 Q56 91 60 98 L59 122 Q55 128 51 128 Q54 108 51 86Z',
-        'M89 86 Q84 91 80 98 L81 122 Q85 128 89 128 Q86 108 89 86Z'
-      ]
+      shoulders:pair('M48 49 C42 48 37 52 35 58 C34 64 38 69 44 72 C49 66 53 60 59 56 C57 52 53 50 48 49Z'),
+      triceps:pair('M43 66 C39 65 36 69 35 75 L31 90 Q31 96 35 99 L41 91 L47 74Z'),
+      biceps:pair('M42 68 Q46 66 49 70 L45 83 L39 94 Q35 94 33 91 L37 76Z'),
+      forearms:pair('M29 95 Q33 98 37 96 L32 108 L27 117 Q23 119 21 115 L24 106Z'),
+      traps:['M63 46 Q70 53 77 46 L87 53 Q83 62 78 70 L70 77 L62 70 Q57 62 53 53Z'],
+      lats:pair('M54 71 Q61 75 68 80 L68 114 Q63 122 56 126 Q52 109 49 93 Q48 81 54 71Z'),
+      lowerBack:pair('M63 85 Q67 87 69 87 L69 126 Q65 132 60 131 Q63 114 62 100Z'),
+      glutes:pair('M51 126 Q60 123 69 128 L69 149 Q64 155 57 155 Q49 152 46 144 Q46 134 51 126Z'),
+      hamstrings:[...pair('M50 154 Q59 156 67 151 L65 177 Q63 190 57 196 Q50 196 47 190 Q44 183 46 174Z'),'M68 153 Q69 155 70 155 Q71 155 72 153 L71 184 Q70 190 70 192 Q69 190 69 184Z'],
+      calves:pair('M49 195 Q54 197 59 194 C58 206 55 217 54 226 L50 237 Q46 240 43 237 L45 223 Q46 210 47 202Z'),
+      obliques:pair('M52 85 Q57 90 61 97 L60 122 Q56 128 52 128 Q55 108 52 85Z')
     }
   };
-  const leftArm = 'M50 47 C44 46 38 49 34 54 C30 59 30 66 28 73 L22 89 C20 94 18 100 16 106 L12 113 L5 119 Q3 121 5 124 Q7 126 10 123 L15 120 L11 128 Q10 131 13 130 L20 122 L16 131 Q16 133 19 131 L25 121 L23 130 Q23 133 26 130 L32 115 Q34 111 32 106 L37 90 L43 74 L52 63Z';
-  const leftLeg = 'M53 137 C50 143 47 153 43 165 Q38 178 42 188 C46 197 47 203 46 211 L42 229 Q41 234 38 238 Q36 241 40 243 L52 242 Q56 240 55 235 L57 216 C58 205 63 194 65 182 L68 151 L62 146Z';
-  const base = `<g class="body-base">
-    <path d="${leftArm}" transform="translate(10 0) scale(.8 1)"/><path d="${leftArm}" transform="translate(130 0) scale(-.8 1)"/>
-    <path d="${leftLeg}" transform="translate(11.6 0) scale(.8 1)"/><path d="${leftLeg}" transform="translate(128.4 0) scale(-.8 1)"/>
-    <path d="M52 47 Q61 45 70 50 Q79 45 88 47 L97 53 Q91 63 90 70 C90 79 88 88 86 98 L88 116 Q88 125 82 131 Q76 135 73 138 L70 135 L67 138 Q64 135 58 131 Q52 125 52 116 L54 98 C52 88 50 79 50 70 L43 53Z"/>
-    <path d="M52 124 Q60 132 68 134 L70 133 L72 134 Q80 132 88 124 L87 133 Q80 144 74 150 L70 146 L66 150 Q60 144 53 133Z"/>
-    <path d="M63 31 Q70 36 77 31 L78 46 Q75 51 70 52 Q65 51 62 46Z"/>
-    <path d="M62 12 Q65 8 70 8 Q76 8 79 13 L80 24 Q79 31 75 34 L70 37 L65 34 Q60 31 60 24 L61 16Z"/>
-    <path d="M60 21 Q57 20 58 25 Q59 28 62 28 M80 21 Q83 20 82 25 Q81 28 78 28"/>
-    <path d="M40 238 Q46 241 53 239 L54 243 Q50 247 40 247 Q35 246 37 243Z" transform="translate(11.6 0) scale(.8 1)"/>
-    <path d="M40 238 Q46 241 53 239 L54 243 Q50 247 40 247 Q35 246 37 243Z" transform="translate(128.4 0) scale(-.8 1)"/>
-  </g>`;
-  const anatomy = {
-    front: [
-      'M53 55 Q61 53 69 59 M87 55 Q79 53 71 59',
-      'M51 62 Q60 72 69 74 M89 62 Q80 72 71 74',
-      'M70 58 L70 77',
-      'M59 79 Q70 82 81 79',
-      'M58 91 Q70 94 82 91',
-      'M58 102 Q70 105 82 102',
-      'M58 113 Q70 116 82 113',
-      'M48 77 Q53 86 56 97 M92 77 Q87 86 84 97',
-      'M54 124 Q61 136 70 145 Q79 136 86 124',
-      'M50 140 Q58 144 66 149 M90 140 Q82 144 74 149',
-      'M48 171 Q54 177 63 177 M92 171 Q86 177 77 177',
-      'M44 187 Q50 190 58 188 M96 187 Q90 190 82 188',
-      'M46 202 Q51 205 57 203 M94 202 Q89 205 83 203',
-      'M35 65 Q39 72 36 80 M105 65 Q101 72 104 80',
-      'M25 94 Q28 100 24 106 M115 94 Q112 100 116 106',
-      'M63 34 Q70 38 77 34'
-    ],
-    back: [
-      'M63 46 Q70 52 77 46',
-      'M54 53 Q61 62 68 70 M86 53 Q79 62 72 70',
-      'M70 51 L70 130',
-      'M55 70 Q62 79 67 92 M85 70 Q78 79 73 92',
-      'M55 89 Q61 101 62 114 M85 89 Q79 101 78 114',
-      'M61 83 Q65 91 64 103 M79 83 Q75 91 76 103',
-      'M52 133 Q61 137 69 136 M88 133 Q79 137 71 136',
-      'M52 154 Q61 160 69 154 M88 154 Q79 160 71 154',
-      'M50 162 Q57 176 57 190 M90 162 Q83 176 83 190',
-      'M47 188 Q53 194 59 192 M93 188 Q87 194 81 192',
-      'M48 204 Q53 208 58 205 M92 204 Q87 208 82 205',
-      'M35 65 Q39 72 36 80 M105 65 Q101 72 104 80',
-      'M25 94 Q28 100 24 106 M115 94 Q112 100 116 106',
-      'M63 34 Q70 38 77 34'
-    ]
-  };
-  const figure = side => {
-    const parts = Object.entries(regions[side]).flatMap(([muscle, paths]) => paths.map(path => {
-      const transform = ['shoulders','biceps','triceps','forearms','obliques','quads','calves','glutes','hamstrings'].includes(muscle) ? 'translate(14 0) scale(.8 1)' : '';
-      return `<path class="muscle ${active.has(muscle) ? 'hot' : ''}" d="${path}"${transform ? ` transform="${transform}"` : ''}/>`;
-    })).join('');
-    const lines = anatomy[side].map(path => `<path d="${path}"/>`).join('');
-    return `<div class="figure-card"><svg class="anatomy-figure" viewBox="0 0 140 250" role="img" aria-label="${side === 'front' ? 'Front' : 'Back'} muscle map">${base}${parts}<g class="anatomy-lines">${lines}</g></svg></div>`;
-  };
+  const filterId = `map-red-neutral-${Math.random().toString(36).slice(2)}`;
+  const layers = side => Object.entries(regions[side]).flatMap(([muscle, paths]) => active.has(muscle) ? paths.map(path => {
+    const d = typeof path === 'string' ? path : path.d;
+    const transform = typeof path === 'string' ? '' : path.mirror ? 'translate(140 0) scale(-1 1)' : '';
+    return `<path class="muscle hot" d="${d}"${transform ? ` transform="${transform}"` : ''}/>`;
+  }) : []).join('');
   const used = [...active].map(label).sort().join(' · ');
-  return `<div class="muscle-map">${figure('front')}${figure('back')}</div><div class="muscle-legend">${escapeHTML(used || 'No muscle groups listed')}</div>`;
+  return `<div class="muscle-map"><svg class="anatomy-figure" viewBox="0 0 290 247" role="img" aria-label="Front and back muscle map">
+    <defs><filter id="${filterId}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 -1 -1 0 0" result="red-mask-raw"/>
+      <feComponentTransfer in="red-mask-raw" result="red-mask"><feFuncA type="linear" slope="10" intercept="-1"/></feComponentTransfer>
+      <feFlood flood-color="#c6c9ca" result="neutral-gray"/>
+      <feComposite in="neutral-gray" in2="red-mask" operator="in" result="neutralized-red"/>
+      <feComposite in="neutralized-red" in2="SourceGraphic" operator="over"/>
+    </filter></defs>
+    <image href="./muscle-map-reference.png?v=22" x="0" y="0" width="290" height="247" preserveAspectRatio="none" filter="url(#${filterId})"/>
+    <g transform="translate(10 0)">${layers('front')}</g><g transform="translate(150 0)">${layers('back')}</g>
+  </svg></div><div class="muscle-legend">${escapeHTML(used || 'No muscle groups listed')}</div>`;
 }
 function exerciseSummary(exercise) {
   return `${label(exercise.gear)} · ${label(exercise.pattern)} · ${(exercise.muscles || []).map(label).join(", ")}`;

@@ -515,16 +515,14 @@ main {
 }
 
 .muscle-map {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(0, 1fr);
-  align-items: stretch;
-  gap: 0;
+  display: block;
+  width: 100%;
   max-width: 480px;
   aspect-ratio: 290 / 247;
   margin: 0 auto;
   padding: 0;
-  background: #e8e8e8
+  background: #e8e8e8;
+  overflow: hidden
 }
 
 .figure-card {
@@ -546,7 +544,12 @@ main {
   margin: 0 auto
 }
 
-.anatomy-figure { shape-rendering: geometricPrecision }
+.anatomy-figure {
+  display: block;
+  width: 100%;
+  height: 100%;
+  shape-rendering: geometricPrecision
+}
 
 .figure-label {
   font-size: 11px;
@@ -573,7 +576,11 @@ main {
 
 .muscle.hot {
   fill: #c46e76;
-  stroke: #f0dcde
+  fill-opacity: .78;
+  stroke: #f0dcde;
+  stroke-width: .8;
+  stroke-opacity: .8;
+  pointer-events: none
 }
 
 .anatomy-lines {
