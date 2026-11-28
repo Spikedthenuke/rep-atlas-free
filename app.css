@@ -537,18 +537,14 @@ main {
   shape-rendering: geometricPrecision
 }
 
-.anatomy-base path {
-  fill: var(--muscle-inactive);
-  stroke: var(--muscle-seams);
-  stroke-width: .65;
-  stroke-linecap: round;
-  stroke-linejoin: round
+.anatomy-raster {
+  pointer-events: none
 }
 
 .muscle-region {
   fill: var(--muscle-inactive);
   stroke: var(--muscle-seams);
-  stroke-width: .9;
+  stroke-width: .55;
   stroke-linecap: round;
   stroke-linejoin: round;
   transition: fill .16s ease
@@ -560,21 +556,6 @@ main {
 
 .muscle-region[data-role="secondary"] {
   fill: var(--muscle-secondary)
-}
-
-.anatomy-joints path {
-  fill: var(--muscle-inactive);
-  stroke: var(--muscle-seams);
-  stroke-width: .7
-}
-
-.anatomy-detail {
-  fill: none;
-  stroke: var(--muscle-seams);
-  stroke-width: .85;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  pointer-events: none
 }
 
 .day-row {

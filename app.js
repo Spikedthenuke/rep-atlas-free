@@ -767,42 +767,19 @@ function muscleMap(exercises = [], workout = null) {
     ? "Primary muscles: " + (primary.join(", ") || "none") + ". Secondary muscles: " + (secondary.join(", ") || "none") + "."
     : "No muscles selected. Both figures are inactive.";
   const mapId = "muscle-map-" + (++muscleMapInstance);
+  const neutralFilterId = mapId + "-neutral";
   const renderFigure = view => {
     const figureTransform = view === "front" ? "translate(10 5)" : "translate(150 5)";
-    const arm = "M51 42 C45 40 39 42 35 48 C31 54 30 63 27 72 L22 86 C20 91 18 95 17 100 L14 111 L10 119 Q9 121 11 123 Q13 124 15 121 L20 114 L17 125 Q17 128 19 126 L24 116 L22 128 Q22 130 24 128 L29 117 L29 127 Q30 130 32 127 L34 114 C35 108 36 103 35 97 L39 84 L45 69 L54 57Z";
-    const leg = view === "front"
-      ? "M52 130 C46 132 42 139 40 148 C38 158 39 169 42 179 L45 192 C48 199 48 205 47 213 L43 236 C42 242 39 247 36 251 Q39 255 52 254 C56 250 56 244 56 237 L59 217 C61 207 65 195 66 184 L69 148 L63 137Z"
-      : "M52 130 C46 132 42 139 40 148 C39 158 40 170 43 182 L46 195 C49 202 49 207 48 215 L44 237 C43 243 40 248 37 251 Q40 255 53 254 C57 250 57 244 57 237 L59 218 C61 207 64 196 66 184 L69 148 L63 137Z";
-    const foot = view === "front"
-      ? "M37 248 Q42 250 51 248 L56 251 L56 255 Q49 258 34 256 L30 254 Q32 250 37 248Z"
-      : "M38 248 Q44 250 52 248 L57 251 L57 255 Q50 258 36 256 L31 254 Q33 250 38 248Z";
-    const torso = "M62 34 Q70 38 78 34 L80 41 C84 42 89 43 93 47 Q88 54 87 64 C89 76 89 89 87 101 L89 118 Q91 128 83 135 L76 143 L70 147 L64 143 L57 135 Q49 128 51 118 L53 101 C51 89 51 76 53 64 Q52 54 47 47 C51 43 56 42 60 41Z";
-    const pelvis = "M52 119 Q60 126 68 128 L70 126 L72 128 Q80 126 88 119 L89 133 Q84 141 77 149 L70 154 L63 149 Q56 141 51 133Z";
-    const head = "M62 7 Q65 4 70 4 Q75 4 78 7 C81 10 81 17 80 23 Q79 30 74 34 L70 36 L66 34 Q61 30 60 23 Q59 16 60 10Z";
-    const base = '<g class="anatomy-base">' +
-      '<path d="' + arm + '"/><path d="' + arm + '" transform="translate(140 0) scale(-1 1)"/>' +
-      '<path d="' + leg + '"/><path d="' + leg + '" transform="translate(140 0) scale(-1 1)"/>' +
-      '<path d="' + foot + '"/><path d="' + foot + '" transform="translate(140 0) scale(-1 1)"/>' +
-      '<path d="' + torso + '"/><path d="' + pelvis + '"/>' +
-      '<path d="M63 29 Q70 34 77 29 L78 45 Q75 51 70 52 Q65 51 62 45Z"/>' +
-      '<path d="' + head + '"/><path d="M60 18 Q57 17 58 23 Q59 27 62 27 M80 18 Q83 17 82 23 Q81 27 78 27"/>' +
-      '</g>';
     const regions = muscleMapGeometry[view].map((shape,index) => {
       const role = roles.get(shape.muscle)?.get(shape.side) || "inactive";
       const transform = shape.mirror ? ' transform="translate(140 0) scale(-1 1)"' : "";
       const regionId = mapId + "-" + view + "-" + shape.side + "-" + shape.muscle + "-" + index;
       return '<path id="' + regionId + '" class="muscle-region" data-muscle-id="' + shape.muscle + '" data-side="' + shape.side + '" data-role="' + role + '" d="' + shape.d + '"' + transform + '/>';
     }).join("");
-    const kneecap = view === "front"
-      ? '<path d="M44 190 Q51 194 58 190 L59 198 Q52 201 46 198Z"/><path d="M44 190 Q51 194 58 190 L59 198 Q52 201 46 198Z" transform="translate(140 0) scale(-1 1)"/>'
-      : '<path d="M44 191 Q51 195 58 191 L59 199 Q52 202 46 199Z"/><path d="M44 191 Q51 195 58 191 L59 199 Q52 202 46 199Z" transform="translate(140 0) scale(-1 1)"/>';
-    const details = view === "front"
-      ? '<path d="M62 41 Q70 46 78 41 M55 53 Q61 51 69 54 M71 54 Q79 51 85 53 M70 54 L70 77 M59 79 Q70 82 81 79 M59 92 Q70 95 81 92 M60 103 Q70 106 80 103 M49 77 Q53 84 55 94 M91 77 Q87 84 85 94 M54 127 Q60 137 70 144 Q80 137 86 127 M45 194 Q52 198 59 194 M81 194 Q88 198 95 194 M47 214 Q52 217 58 214 M82 214 Q88 217 93 214"/>'
-      : '<path d="M62 40 Q70 46 78 40 M55 52 Q61 59 68 64 M85 52 Q79 59 72 64 M70 52 L70 126 M54 69 Q61 78 66 92 M86 69 Q79 78 74 92 M52 88 Q58 96 60 111 M88 88 Q82 96 80 111 M52 126 Q61 132 69 129 M88 126 Q79 132 71 129 M51 154 Q60 159 68 154 M89 154 Q80 159 72 154 M48 190 Q54 195 60 191 M92 190 Q86 195 80 191 M47 213 Q53 216 59 212 M93 213 Q87 216 81 212"/>';
-    return '<g transform="' + figureTransform + '">' + base + '<g class="muscle-regions">' + regions + '</g><g class="anatomy-joints" aria-hidden="true">' + kneecap + '</g><g class="anatomy-detail" aria-hidden="true">' + details + '</g></g>';
+    return '<g transform="' + figureTransform + '"><g class="muscle-regions">' + regions + '</g></g>';
   };
   const alt = "Muscle map. " + description;
-  return '<div class="muscle-map"><svg class="anatomy-figure" viewBox="0 0 290 265" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + escapeHTML(alt) + '"><title>Front and back muscle map</title><desc>' + escapeHTML(description) + '</desc>' + renderFigure("front") + renderFigure("back") + '</svg></div>';
+  return '<div class="muscle-map"><svg class="anatomy-figure" viewBox="0 0 290 265" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + escapeHTML(alt) + '"><title>Front and back muscle map</title><desc>' + escapeHTML(description) + '</desc><defs><filter id="' + neutralFilterId + '" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/></filter></defs><image class="anatomy-raster" href="./muscle-map-reference.png" x="0" y="0" width="290" height="265" preserveAspectRatio="none" filter="url(#' + neutralFilterId + ')" aria-hidden="true"/>' + renderFigure("front") + renderFigure("back") + '</svg></div>';
 }
 
 function exercisePrimaryMuscles(exercise) {
