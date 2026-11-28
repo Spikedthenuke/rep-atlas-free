@@ -46,19 +46,118 @@ const parseDateKey = value => { const [year,month,day]=String(value).split("-").
 const addDays = (value,count) => { const date=parseDateKey(value); date.setDate(date.getDate()+count); return dateKey(date); };
 const weekdayForDate = value => weekDays[(parseDateKey(value).getDay()+6)%7];
 const displayDate = value => parseDateKey(value).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+const fullDate = value => parseDateKey(value).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+const validDateKey = value => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && dateKey(parseDateKey(value)) === value;
+const dayNumber = value => Date.parse(value + "T00:00:00Z") / 86400000;
 const nextScheduleDate = day => {
   if(!day.scheduledDate)return null;
   const today=dateKey(new Date());
   if(day.scheduledDate>=today)return day.scheduledDate;
-  const serial=value=>{const [year,month,date]=value.split("-").map(Number);return Date.UTC(year,month-1,date);};
-  const elapsed=Math.round((serial(today)-serial(day.scheduledDate))/86400000);
+  const elapsed=dayNumber(today)-dayNumber(day.scheduledDate);
   return addDays(day.scheduledDate,Math.ceil(elapsed/7)*7);
 };
 const availabilityForWeek = start => {
-  if (!start) return [];
-  const end=addDays(start,6);
-  return [...new Set(data.availability.filter(value=>value>=start&&value<=end))].sort();
+  if (!validDateKey(start)) return [];
+  return Array.from({length:7}, (_, index) => addDays(start, index)).filter(isAvailable);
 };
+
+function validAvailabilityRule(rule) {
+  if (!rule || !validDateKey(rule.start) || (rule.end !== null && (!validDateKey(rule.end) || rule.end < rule.start))) return false;
+  if (rule.type === "weekly") return Array.isArray(rule.weekdays) && rule.weekdays.length > 0 && rule.weekdays.every(day => weekDays.includes(day));
+  return rule.type === "rolling" && Array.isArray(rule.pattern) && rule.pattern.length >= 2 && rule.pattern.length <= 60
+    && rule.pattern.every(day => typeof day === "boolean") && rule.pattern.includes(true);
+}
+
+function ruleIncludes(date, rule = data.availabilityRule) {
+  if (!rule || date < rule.start || (rule.end && date > rule.end)) return false;
+  if (rule.type === "weekly") return rule.weekdays.includes(weekdayForDate(date));
+  return rule.pattern[(dayNumber(date) - dayNumber(rule.start)) % rule.pattern.length];
+}
+
+function isAvailable(date) {
+  return !data.unavailableDates.includes(date) && (data.availability.includes(date) || ruleIncludes(date));
+}
+
+function nextRuleDate(from, rule) {
+  if (!rule) return null;
+  const start = from > rule.start ? from : rule.start;
+  const length = rule.type === "weekly" ? 7 : rule.pattern.length;
+  for (let offset = 0; offset < length; offset++) {
+    const date = addDays(start, offset);
+    if (rule.end && date > rule.end) return null;
+    if (ruleIncludes(date, rule)) return date;
+  }
+  return null;
+}
+
+function nextAvailableDate(from) {
+  const manual = data.availability.find(date => date >= from && !data.unavailableDates.includes(date));
+  let recurring = nextRuleDate(from, data.availabilityRule);
+  while (recurring && data.unavailableDates.includes(recurring)) {
+    recurring = nextRuleDate(addDays(recurring, 1), data.availabilityRule);
+  }
+  return manual && (!recurring || manual < recurring) ? manual : recurring;
+}
+
+// Count earlier slots without generating every date in a long-running rule.
+function availableDateCount(start, before) {
+  const rule = data.availabilityRule;
+  let count = 0;
+  if (rule) {
+    const first = Math.max(dayNumber(start), dayNumber(rule.start));
+    const end = Math.min(dayNumber(before), rule.end ? dayNumber(rule.end) + 1 : Infinity);
+    if (end > first) {
+      const length = rule.type === "weekly" ? 7 : rule.pattern.length;
+      const date = start > rule.start ? start : rule.start;
+      for (let offset = 0; offset < length && first + offset < end; offset++) {
+        if (ruleIncludes(addDays(date, offset), rule)) count += Math.ceil((end - first - offset) / length);
+      }
+    }
+  }
+  const inWindow = date => date >= start && date < before;
+  for (const date of data.availability) {
+    if (inWindow(date) && !ruleIncludes(date) && !data.unavailableDates.includes(date)) count++;
+  }
+  for (const date of data.unavailableDates) {
+    if (inWindow(date) && ruleIncludes(date)) count--;
+  }
+  return count;
+}
+
+function nextCalendarSessions(plan) {
+  const today = dateKey(new Date());
+  const start = plan.calendarStart > today ? plan.calendarStart : today;
+  const sessions = Array(plan.days.length).fill(null);
+  if (!sessions.length) return sessions;
+  const first = ((plan.calendarOffset || 0) + availableDateCount(plan.calendarStart, start)) % sessions.length;
+  upcomingAvailableDates(start, sessions.length).forEach((date, index) => {
+    sessions[(first + index) % sessions.length] = date;
+  });
+  return sessions;
+}
+
+function upcomingAvailableDates(start, limit) {
+  const dates = [];
+  let from = start;
+  for (let index = 0; index < limit; index++) {
+    const date = nextAvailableDate(from);
+    if (!date) break;
+    dates.push(date);
+    from = addDays(date, 1);
+  }
+  return dates;
+}
+
+function setAvailabilityRule(rule) {
+  const today = dateKey(new Date());
+  for (const plan of data.plans) {
+    if (plan.calendarStart && plan.calendarStart < today && plan.days.length) {
+      plan.calendarOffset = ((plan.calendarOffset || 0) + availableDateCount(plan.calendarStart, today)) % plan.days.length;
+      plan.calendarStart = today;
+    }
+  }
+  data.availabilityRule = rule;
+}
 
 function applyTheme() {
   const theme=data?.theme==="dark"?"dark":"light";
@@ -70,12 +169,25 @@ function applyTheme() {
 
 function normalizePlans() {
   let migrated = false;
-  if(!Array.isArray(data.availability)){data.availability=[];migrated=true;}
-  const today=dateKey(new Date());
-  const availability=[...new Set(data.availability.filter(value=>/^\d{4}-\d{2}-\d{2}$/.test(value)&&value>=today))].sort();
-  if(availability.length!==data.availability.length||availability.some((value,index)=>value!==data.availability[index])){data.availability=availability;migrated=true;}
+  for (const key of ["availability", "unavailableDates"]) {
+    const dates = Array.isArray(data[key]) ? data[key] : [];
+    const normalized = [...new Set(dates.filter(validDateKey))].sort();
+    if (dates !== data[key] || normalized.length !== dates.length || normalized.some((date,index) => date !== dates[index])) {
+      data[key] = normalized;
+      migrated = true;
+    }
+  }
+  if (data.availabilityRule != null && !validAvailabilityRule(data.availabilityRule)) {
+    data.availabilityRule = null;
+    migrated = true;
+  }
   if(data.theme!=="light"&&data.theme!=="dark"){data.theme="light";migrated=true;}
   data.plans.forEach(plan => {
+    if (plan.calendarStart && !validDateKey(plan.calendarStart)) {
+      delete plan.calendarStart;
+      delete plan.calendarOffset;
+      migrated = true;
+    }
     const schedule = defaultWeeklyDays(plan.days.length);
     plan.days.forEach((day, index) => {
       if (!day.weekday) { day.weekday = schedule[index]; migrated = true; }
@@ -93,7 +205,7 @@ async function start() {
   const catalog = await response.json();
   try { data = JSON.parse(localStorage.getItem(storeKey)); } catch { data = null; }
   if (!data || !Array.isArray(data.library)) {
-    data = {library: catalog, plans: [], goals: [], history: [], availability: [], theme: "light", weightUnit: "lb"};
+    data = {library: catalog, plans: [], goals: [], history: [], availability: [], unavailableDates: [], theme: "light", weightUnit: "lb"};
     persist();
   }
   data.plans ||= [];
@@ -125,7 +237,7 @@ function renderPlans() {
     <section class="card hero"><span class="eyebrow">Start with your goal</span><h2>Build a plan that fits your week.</h2><p>Choose your focus, split, equipment, and schedule. Adjust every session after.</p><button class="button primary" data-action="new-plan">Build a plan <span aria-hidden="true">→</span></button></section>
     ${renderAvailabilityCalendar()}
     <h2 class="section-title">Saved plans</h2>
-    ${data.plans.length ? data.plans.map(plan => `<button class="card plan-card" data-open-plan="${escapeHTML(plan.id)}"><div class="row"><div><strong>${escapeHTML(plan.goal)}</strong><div class="subtle">${escapeHTML(plan.split)} · ${plan.days.length} sessions · ${escapeHTML(scheduleLabel(plan.days))} weekly</div></div><span class="badge">${escapeHTML(plan.target)}</span></div></button>`).join("") : `<div class="card empty"><b>No plan saved yet</b>Your first plan will show up here.</div>`}
+    ${data.plans.length ? data.plans.map(plan => `<button class="card plan-card" data-open-plan="${escapeHTML(plan.id)}"><div class="row"><div><strong>${escapeHTML(plan.goal)}</strong><div class="subtle">${escapeHTML(plan.split)} · ${plan.days.length} sessions · ${plan.calendarStart ? "Follows calendar" : escapeHTML(scheduleLabel(plan.days)) + " weekly"}</div></div><span class="badge">${escapeHTML(plan.target)}</span></div></button>`).join("") : `<div class="card empty"><b>No plan saved yet</b>Your first plan will show up here.</div>`}
     <p class="safe-note">Your workout data stays in this browser on this phone. Use the arrow at the top to save a backup file.</p>`;
 }
 
@@ -134,16 +246,93 @@ function renderAvailabilityCalendar() {
   const first=new Date(year,month,1),offset=(first.getDay()+6)%7,count=new Date(year,month+1,0).getDate();
   const today=dateKey(new Date());
   const cells=Array(offset).fill('<span class="calendar-blank" aria-hidden="true"></span>');
+  let availableCount = 0;
   for(let day=1;day<=count;day++){
-    const key=dateKey(new Date(year,month,day)),selected=data.availability.includes(key),past=key<today;
+    const key = dateKey(new Date(year, month, day));
+    const past = key < today;
+    const selected = !past && isAvailable(key);
+    if (selected) availableCount++;
     const longDate=parseDateKey(key).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
-    cells.push(`<button type="button" class="calendar-day ${selected?"selected":""}" data-availability-date="${key}" aria-label="${escapeHTML(longDate)}${selected?", available":""}" aria-pressed="${selected}" ${past?"disabled":""}><span>${day}</span>${selected?"<small>Available</small>":""}</button>`);
+    cells.push(`<button type="button" class="calendar-day ${selected?"selected":""}" data-availability-date="${key}" aria-label="${escapeHTML(longDate)}${selected?", available":""}" aria-pressed="${selected}" ${past?"disabled":""}>${day}</button>`);
   }
   while(cells.length<42)cells.push('<span class="calendar-blank" aria-hidden="true"></span>');
   const monthName=calendarMonth.toLocaleDateString(undefined,{month:"long",year:"numeric"});
   const currentMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
   const atCurrent=year===currentMonth.getFullYear()&&month===currentMonth.getMonth();
-  return `<section class="card availability-card"><div class="row calendar-heading"><div><span class="eyebrow">Availability calendar</span><p class="subtle">Mark future days you can train.</p></div><div class="calendar-nav"><button type="button" class="button small soft" data-calendar-shift="-1" aria-label="Previous month" ${atCurrent?"disabled":""}>‹</button><strong>${escapeHTML(monthName)}</strong><button type="button" class="button small soft" data-calendar-shift="1" aria-label="Next month">›</button></div></div><div class="calendar-grid calendar-weekdays">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(day=>`<span>${day}</span>`).join("")}</div><div class="calendar-grid">${cells.join("")}</div><div class="row calendar-footer"><span class="subtle">${data.availability.length} available date${data.availability.length===1?"":"s"} selected</span>${data.availability.length?'<button type="button" class="text-button" data-action="clear-availability">Clear dates</button>':""}</div><p class="subtle calendar-help">When you build a plan, its first week uses your selected dates in the 7-day window after the start date. That weekday pattern repeats each week.</p></section>`;
+  const rule = data.availabilityRule;
+  const hasEdits = [...data.availability, ...data.unavailableDates].some(date => date >= today);
+  return `<section class="card availability-card">
+    <div class="row calendar-heading"><div><h2 class="section-title">Availability calendar</h2><p class="subtle">Tap a date to change it.</p></div>
+      <button type="button" class="button small soft" data-action="edit-availability">${rule ? "Edit repeat" : "Set repeat"}</button>
+    </div>
+    ${rule ? `<p class="subtle calendar-rule">${escapeHTML(availabilityRuleLabel(rule))}</p>` : ""}
+    <div class="calendar-nav"><button type="button" class="button small soft" data-calendar-shift="-1" aria-label="Previous month" ${atCurrent?"disabled":""}>‹</button><strong>${escapeHTML(monthName)}</strong><button type="button" class="button small soft" data-calendar-shift="1" aria-label="Next month">›</button></div>
+    <div class="calendar-grid calendar-weekdays">${weekDays.map(day=>`<span>${day.slice(0,3)}</span>`).join("")}</div>
+    <div class="calendar-grid">${cells.join("")}</div>
+    <div class="row calendar-footer"><span class="subtle">${availableCount} available ${availableCount === 1 ? "day" : "days"} this month</span>
+      ${hasEdits ? '<button type="button" class="text-button" data-action="clear-availability">Reset date edits</button>' : ""}
+    </div>
+  </section>`;
+}
+
+function availabilityRuleLabel(rule) {
+  const pattern = rule.type === "weekly"
+    ? "Weekly on " + weekDays.filter(day => rule.weekdays.includes(day)).map(day => day.slice(0,3)).join(", ")
+    : `Rolling every ${rule.pattern.length} days`;
+  const dates = rule.end ? ` through ${fullDate(rule.end)}` : " with no end date";
+  return `${pattern} from ${fullDate(rule.start)}${dates}`;
+}
+
+function openAvailabilityEditor() {
+  const rule = data.availabilityRule;
+  const pattern = rule?.type === "rolling" ? rule.pattern : [true, false];
+  const type = rule?.type || "weekly";
+  const monthStart = dateKey(calendarMonth);
+  const today = dateKey(new Date());
+  const start = rule?.start || (monthStart > today ? monthStart : today);
+  showModal("Repeat availability", `<form id="availability-form">
+    <div class="field"><label for="availability-type">Repeat pattern</label>
+      <select id="availability-type" name="type"><option value="weekly">Same weekdays each week</option><option value="rolling" ${type === "rolling" ? "selected" : ""}>Rolling cycle</option></select>
+    </div>
+    <div class="field"><label for="availability-start">Starts on</label><input id="availability-start" name="start" type="date" value="${start}" required></div>
+    <fieldset class="repeat-options field" id="weekly-availability">
+      <legend class="field-label">Days you can train</legend>
+      ${checkedOptions(weekDays, rule?.weekdays || [], "weekdays")}
+    </fieldset>
+    <fieldset class="repeat-options field" id="rolling-availability">
+      <legend class="field-label">Rolling cycle</legend>
+      <label for="cycle-length">Days in a cycle</label>
+      <select id="cycle-length" name="cycleLength">${Array.from({length:59}, (_, index) => index + 2).map(length => `<option ${length === pattern.length ? "selected" : ""}>${length}</option>`).join("")}</select>
+      <span class="subtle">Day 1 is your start date. Tap the days you can train.</span>
+      <div class="cycle-grid">${Array.from({length:60}, (_, index) => `<label class="cycle-day"><input type="checkbox" name="cycleDay" value="${index}" ${pattern[index] ? "checked" : ""}><span>Day ${index + 1}<small class="cycle-off" aria-hidden="true">Off</small><small class="cycle-on" aria-hidden="true">Train</small></span></label>`).join("")}</div>
+    </fieldset>
+    <div class="field"><label for="availability-duration">Repeats until</label>
+      <select id="availability-duration" name="duration"><option value="forever">No end date</option><option value="date" ${rule?.end ? "selected" : ""}>Specific date</option></select>
+    </div>
+    <div class="field" id="availability-end-field"><label for="availability-end">Last date (inclusive)</label><input id="availability-end" name="end" type="date" value="${rule?.end || ""}"></div>
+    <div class="modal-actions"><button class="button soft" type="button" data-close>Cancel</button><button class="button primary" type="submit">Save repeat</button></div>
+    ${rule ? '<button class="text-button repeat-remove" type="button" data-action="remove-availability-rule">Remove repeating schedule</button>' : ""}
+  </form>`);
+  updateAvailabilityEditor(document.querySelector("#availability-form"));
+}
+
+function updateAvailabilityEditor(form) {
+  const rolling = form.elements.type.value === "rolling";
+  const end = form.elements.end;
+  const limited = form.elements.duration.value === "date";
+  for (const [id, active] of [["weekly-availability", !rolling], ["rolling-availability", rolling]]) {
+    const field = form.querySelector("#" + id);
+    field.hidden = !active;
+    field.disabled = !active;
+  }
+  for (const day of form.querySelectorAll('[name="cycleDay"]')) {
+    day.disabled = Number(day.value) >= Number(form.elements.cycleLength.value);
+    day.parentElement.hidden = day.disabled;
+  }
+  form.querySelector("#availability-end-field").hidden = !limited;
+  end.required = limited;
+  end.disabled = !limited;
+  end.min = form.elements.start.value;
 }
 
 function targetFor(text) {
@@ -195,42 +384,67 @@ function checkedOptions(options, selected, group) {
   return `<div class="check-grid">${options.map(option => `<label class="check-option"><input type="checkbox" name="${group}" value="${escapeHTML(option)}" ${selected.includes(option) ? "checked" : ""}>${escapeHTML(label(option))}</label>`).join("")}</div>`;
 }
 
-function openBuilder() {
-  const today=dateKey(new Date());
-  const startDate=data.availability.find(value=>value>=today)||today;
+function openBuilder(draft = {}) {
+  const today = dateKey(new Date());
+  const startDate = draft.startDate || nextAvailableDate(today) || today;
+  const rule = data.availabilityRule;
+  const followsCalendar = draft.followsCalendar ?? Boolean(rule && (!rule.end || rule.end >= today));
   showModal("Build your plan", `<form id="plan-form">
     <div class="field"><label for="goal-text">What do you want to work toward?</label><textarea id="goal-text" name="goal" required placeholder="For example: build strength, improve cardio endurance, or focus on legs"></textarea></div>
     <div class="grid2"><div class="field"><label>Training goal</label><select name="target"><option value="auto">Auto-detect from your goal</option><option>Build muscle</option><option>Get stronger</option><option>Improve endurance</option><option>General fitness</option></select></div>
     <div class="field"><label>Workout split</label><select name="split"><option>Full body</option><option>Upper / lower</option><option>Push / pull / legs</option><option>Cardio</option></select></div></div>
-    <div class="field"><label for="plan-start-date">Start with the week of</label><input id="plan-start-date" name="startDate" type="date" min="${today}" value="${startDate}" required><span class="subtle">Your calendar selections in the next 7 days set the workout dates and weekly repeating pattern.</span><div id="schedule-preview" class="schedule-preview"></div></div>
+    <div class="field"><label for="plan-start-date">Start on or after</label><input id="plan-start-date" name="startDate" type="date" min="${today}" value="${startDate}" required>
+      <label class="check-option"><input id="plan-follow-calendar" type="checkbox" name="followsCalendar" ${followsCalendar ? "checked" : ""}><span>Keep this plan synced with my calendar</span></label>
+      <div id="schedule-preview" class="schedule-preview"></div>
+    </div>
     <div class="field"><label>Variation</label><select name="variation">${[1,2,3,4].map((n,i)=>`<option value="${i}">Variation ${n}</option>`).join("")}</select></div>
     <div class="field"><span class="field-label">Equipment you can use</span>${checkedOptions(gearOptions,["bodyweight","dumbbells"],"gear")}</div>
     <div class="field"><label class="check-option"><input type="checkbox" name="includeCardio" value="1"><span>Mix cardio into strength days</span></label><span class="subtle">Adds a cardio block alongside the weights so you can work on both.</span></div>
     <div class="modal-actions"><button class="button soft" type="button" data-close>Cancel</button><button class="button primary" type="submit">Preview plan</button></div>
   </form>`);
-  updateBuilderSchedule(startDate);
+  const form = document.querySelector("#plan-form");
+  if (draft.goal !== undefined) {
+    for (const key of ["goal", "target", "split", "variation"]) form.elements[key].value = draft[key];
+    for (const option of form.querySelectorAll('[name="gear"]')) option.checked = draft.gear.includes(option.value);
+    form.elements.includeCardio.checked = draft.includeCardio;
+  }
+  updateBuilderSchedule(form);
 }
 
-function updateBuilderSchedule(start) {
-  const preview=document.querySelector("#schedule-preview");
-  if(!preview)return;
-  const dates=availabilityForWeek(start);
+function builderDates(start, followsCalendar) {
+  if (!validDateKey(start)) return [];
+  const first = followsCalendar ? nextAvailableDate(start) : start;
+  return availabilityForWeek(first);
+}
+
+function updateBuilderSchedule(form) {
+  const preview = form.querySelector("#schedule-preview");
+  const follows = form.elements.followsCalendar.checked;
+  const dates = builderDates(form.elements.startDate.value, follows);
+  const note = follows ? "Your sessions cycle in order on available dates." : "These weekdays repeat each week.";
   preview.innerHTML=dates.length
-    ? `<strong>${dates.length} session${dates.length===1?"":"s"} scheduled</strong><span>${dates.map(value=>`${escapeHTML(displayDate(value))} · ${escapeHTML(weekdayForDate(value))}`).join("<br>")}</span>`
-    : `<strong>No available days in this 7-day window</strong><span>Mark dates on the calendar, or choose another start week.</span>`;
+    ? `<strong>${dates.length} session${dates.length===1?"":"s"} in the first week</strong><span>${dates.map(value=>escapeHTML(displayDate(value))).join(" · ")}</span><span>${note}</span>`
+    : `<strong>No available days ${follows ? "from this date" : "in this week"}</strong><span>Mark dates on the calendar or choose another start date.</span>`;
 }
 
-function previewPlan(plan) {
+function previewPlan(plan, draft) {
   const cardioNote = plan.includeCardio && plan.split !== "Cardio" ? " · cardio included on strength days" : "";
-  showModal("Plan preview", `<p class="subtle">${escapeHTML(plan.goal)} · ${escapeHTML(plan.target)} · ${escapeHTML(plan.split)}${cardioNote}</p><p class="subtle">Starts on your selected dates, then repeats on these weekdays: ${escapeHTML(scheduleLabel(plan.days))}</p>${plan.days.map(day => `<div class="card"><div class="row"><strong>${escapeHTML(day.name)}</strong><span class="badge">${escapeHTML(day.scheduledDate ? displayDate(day.scheduledDate) : day.weekday)}</span></div>${day.items.map(item=>`<div class="exercise-row"><div><div class="exercise-title">${escapeHTML(item.exercise.name)}</div><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div></div></div>`).join("")}</div>`).join("")}<div class="modal-actions"><button class="button soft" data-action="edit-preview">Back</button><button class="button primary" data-action="save-preview">Save plan</button></div>`, {plan});
+  const schedule = plan.calendarStart ? "Sessions follow your availability calendar in order." : `Repeats weekly on ${scheduleLabel(plan.days)}.`;
+  showModal("Plan preview", `<p class="subtle">${escapeHTML(plan.goal)} · ${escapeHTML(plan.target)} · ${escapeHTML(plan.split)}${cardioNote}</p><p class="subtle">${escapeHTML(schedule)}</p>${plan.days.map(day => `<div class="card"><div class="row"><strong>${escapeHTML(day.name)}</strong><span class="badge">${escapeHTML(day.scheduledDate ? displayDate(day.scheduledDate) : day.weekday)}</span></div>${day.items.map(item=>`<div class="exercise-row"><div><div class="exercise-title">${escapeHTML(item.exercise.name)}</div><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div></div></div>`).join("")}</div>`).join("")}<div class="modal-actions"><button class="button soft" data-action="edit-preview">Back</button><button class="button primary" data-action="save-preview">Save plan</button></div>`, {plan});
+  modal._builderDraft = draft;
 }
 
 function renderPlanDetail(plan) {
   const cardioNote = plan.includeCardio && plan.split !== "Cardio" ? " · cardio mixed into strength sessions" : "";
-  app.innerHTML = `<button class="text-button" data-action="back-plans">‹ All plans</button>${heading(plan.goal, `${plan.target} · ${plan.split} · ${plan.days.length} sessions per week${cardioNote}`)}
-    <div class="card"><div class="row"><div><span class="eyebrow">Repeats every week</span><p class="subtle" style="margin:6px 0 0">${escapeHTML(scheduleLabel(plan.days))} · sessions follow plan order</p></div><button class="button small soft" data-action="edit-schedule">Edit days</button></div></div>
+  const follows = Boolean(plan.calendarStart);
+  const dates = follows ? nextCalendarSessions(plan) : plan.days.map(nextScheduleDate);
+  const nextDate = dates.filter(Boolean).sort()[0];
+  const schedule = follows ? (nextDate ? `Next session ${displayDate(nextDate)}` : "Add available dates to schedule more sessions.") : scheduleLabel(plan.days);
+  const sessions = plan.days.length === 1 ? "1 session" : `${plan.days.length} sessions`;
+  app.innerHTML = `<button class="text-button" data-action="back-plans">‹ All plans</button>${heading(plan.goal, `${plan.target} · ${plan.split} · ${sessions}${follows ? " in rotation" : " per week"}${cardioNote}`)}
+    <div class="card"><div class="row"><div><span class="eyebrow">${follows ? "Follows your calendar" : "Repeats every week"}</span><p class="subtle" style="margin:6px 0 0">${escapeHTML(schedule)}</p></div><button class="button small soft" data-action="edit-schedule">Edit days</button></div></div>
     <div class="card"><span class="eyebrow">Recovery option</span><h2 class="section-title" style="margin:6px 0">Missed a workout?</h2><p class="subtle">Choose the session you missed and how many sessions you can still fit in. The new schedule skips that session and keeps your original plan.</p><button class="button soft" data-action="missed">Adjust this week</button></div>
-    ${plan.days.map(day=>`<section class="card"><div class="row"><div><span class="badge">${escapeHTML(nextScheduleDate(day) ? displayDate(nextScheduleDate(day)) : day.weekday || "Unscheduled")}</span><p class="eyebrow" style="margin:8px 0 0">${escapeHTML(day.name)}</p><p class="subtle">${day.items.length} exercises</p></div><button class="button small primary" data-log-day="${escapeHTML(day.id)}">Log session</button></div>
+    ${plan.days.map((day, index)=>`<section class="card"><div class="row"><div><span class="badge">${escapeHTML(dates[index] ? displayDate(dates[index]) : follows ? "Unscheduled" : day.weekday || "Unscheduled")}</span><p class="eyebrow" style="margin:8px 0 0">${escapeHTML(day.name)}</p><p class="subtle">${day.items.length} exercises</p></div><button class="button small primary" data-log-day="${escapeHTML(day.id)}">Log session</button></div>
       ${muscleMap(day.items.flatMap(item=>item.exercise.muscles))}
       ${day.items.map(item=>`<div class="day-exercise"><div class="row"><div><div class="exercise-title">${escapeHTML(item.exercise.name)}</div><div class="exercise-meta">${item.sets} × ${item.reps} ${item.exercise.pattern === "conditioning" ? "min" : /plank|hold|wall sit/i.test(item.exercise.name) ? "sec" : "reps"}</div></div><button class="text-button" data-swap="${escapeHTML(item.id)}" data-day="${escapeHTML(day.id)}">Swap</button></div><div class="row" style="justify-content:flex-start;margin-top:8px"><span class="subtle">Sets</span>${stepper(item.sets,`sets:${day.id}:${item.id}`)}<span class="subtle">Reps / min</span>${stepper(item.reps,`reps:${day.id}:${item.id}`)}</div></div>`).join("")}
       <button class="text-button" data-add-exercise="${escapeHTML(day.id)}">＋ Add exercise</button></section>`).join("")}
@@ -315,13 +529,32 @@ function openMissedDay() {
   const plan = getPlan(openPlanId);
   if (!plan) return;
   const count = Math.max(1, plan.days.length - 1);
-  showModal("Adjust after a missed day", `<form id="recovery-form" data-plan="${escapeHTML(plan.id)}"><div class="field"><label>Which session did you miss?</label><select name="missed">${plan.days.map(day=>`<option value="${escapeHTML(day.id)}">${escapeHTML(day.weekday || "Unscheduled")} · ${escapeHTML(day.name)}</option>`).join("")}</select></div><div class="field"><label>Sessions you can still do this week</label><select name="remaining">${Array.from({length:Math.max(1,plan.days.length-1)},(_,i)=>`<option value="${i+1}" ${i+1===count?"selected":""}>${i+1}</option>`).join("")}</select></div><p class="subtle">The recovery plan skips the missed session and keeps the remaining sessions in order.</p><div class="modal-actions"><button class="button soft" type="button" data-close>Cancel</button><button class="button primary">Create recovery plan</button></div></form>`);
+  showModal("Adjust after a missed day", `<form id="recovery-form" data-plan="${escapeHTML(plan.id)}"><div class="field"><label>Which session did you miss?</label><select name="missed">${plan.days.map(day=>`<option value="${escapeHTML(day.id)}">${plan.calendarStart ? "" : escapeHTML(day.weekday || "Unscheduled") + " · "}${escapeHTML(day.name)}</option>`).join("")}</select></div><div class="field"><label>Sessions you can still do this week</label><select name="remaining">${Array.from({length:Math.max(1,plan.days.length-1)},(_,i)=>`<option value="${i+1}" ${i+1===count?"selected":""}>${i+1}</option>`).join("")}</select></div><p class="subtle">The recovery plan skips the missed session and keeps the remaining sessions in order.</p><div class="modal-actions"><button class="button soft" type="button" data-close>Cancel</button><button class="button primary">Create recovery plan</button></div></form>`);
 }
 
 function openScheduleEditor() {
   const plan = getPlan(openPlanId);
   if (!plan) return;
-  showModal("Set weekly workout days", `<form id="schedule-form" data-plan="${escapeHTML(plan.id)}"><p class="subtle">Choose exactly ${plan.days.length} days. Sessions follow your plan order and repeat every week.</p><div class="field"><span class="field-label">Training days</span>${checkedOptions(weekDays,plan.days.map(day=>day.weekday).filter(Boolean),"weekdays")}</div><div class="modal-actions"><button class="button soft" type="button" data-close>Cancel</button><button class="button primary">Save weekly days</button></div></form>`);
+  showModal("Edit workout schedule", `<form id="schedule-form" data-plan="${escapeHTML(plan.id)}">
+    <div class="field"><label for="plan-schedule-type">Schedule</label><select id="plan-schedule-type" name="type">
+      <option value="weekly">Fixed weekdays</option><option value="calendar" ${plan.calendarStart ? "selected" : ""}>Follow availability calendar</option>
+    </select></div>
+    <p id="calendar-schedule-note" class="subtle">Sessions cycle in order on available dates. Push reminders use fixed weekdays.</p>
+    <fieldset id="fixed-workout-days" class="repeat-options field">
+      <legend class="field-label">Choose exactly ${plan.days.length} weekdays</legend>
+      ${checkedOptions(weekDays,plan.days.map(day=>day.weekday).filter(Boolean),"weekdays")}
+    </fieldset>
+    <div class="modal-actions"><button class="button soft" type="button" data-close>Cancel</button><button class="button primary">Save schedule</button></div>
+  </form>`);
+  updateScheduleEditor(document.querySelector("#schedule-form"));
+}
+
+function updateScheduleEditor(form) {
+  const follows = form.elements.type.value === "calendar";
+  const weekdays = form.querySelector("#fixed-workout-days");
+  weekdays.hidden = follows;
+  weekdays.disabled = follows;
+  form.querySelector("#calendar-schedule-note").hidden = !follows;
 }
 
 function openExercisePicker(dayId, swapId = null) {
@@ -350,12 +583,30 @@ document.addEventListener("click", event => {
   if (!button) { if (event.target === modal) closeModal(); return; }
   if(button.dataset.calendarShift){calendarMonth.setMonth(calendarMonth.getMonth()+Number(button.dataset.calendarShift));render();return;}
   if(button.dataset.availabilityDate){
-    const date=button.dataset.availabilityDate;
-    data.availability=data.availability.includes(date)?data.availability.filter(value=>value!==date):[...data.availability,date].sort();
-    saveAndRender(data.availability.includes(date)?"Day marked available.":"Availability removed.");
+    const date = button.dataset.availabilityDate;
+    const available = !isAvailable(date);
+    data.availability = data.availability.filter(value => value !== date);
+    data.unavailableDates = data.unavailableDates.filter(value => value !== date);
+    if (available && !ruleIncludes(date)) data.availability = [...data.availability, date].sort();
+    if (!available && ruleIncludes(date)) data.unavailableDates = [...data.unavailableDates, date].sort();
+    saveAndRender(available ? "Day marked available." : "Day marked unavailable.");
+    document.querySelector(`[data-availability-date="${date}"]`)?.focus({preventScroll:true});
     return;
   }
-  if(button.dataset.action==="clear-availability"){data.availability=[];saveAndRender("Availability calendar cleared.");return;}
+  if (button.dataset.action === "edit-availability") { openAvailabilityEditor(); return; }
+  if (button.dataset.action === "remove-availability-rule") {
+    setAvailabilityRule(null);
+    closeModal();
+    saveAndRender("Repeating schedule removed.");
+    return;
+  }
+  if (button.dataset.action === "clear-availability") {
+    const today = dateKey(new Date());
+    data.availability = data.availability.filter(date => date < today);
+    data.unavailableDates = data.unavailableDates.filter(date => date < today);
+    saveAndRender("Individual date edits reset.");
+    return;
+  }
   if (button.matches(".tab")) { tab = button.dataset.tab; openPlanId = null; render(); }
   if (button.id === "backup-button") openBackupMenu();
   if (button.dataset.openPlan) { openPlanId = button.dataset.openPlan; render(); }
@@ -369,7 +620,7 @@ document.addEventListener("click", event => {
   if (button.dataset.action === "export-backup") exportBackup();
   if (button.dataset.action === "import-backup") { closeModal(); document.querySelector("#restore-file").click(); }
   if (button.dataset.action === "save-preview" && modal._previewPlan) { data.plans.unshift(modal._previewPlan); closeModal(); saveAndRender("Plan saved."); }
-  if (button.dataset.action === "edit-preview") openBuilder();
+  if (button.dataset.action === "edit-preview") openBuilder(modal._builderDraft);
   if (button.dataset.action === "delete-plan" && openPlanId) { if (confirm("Delete this plan?")) { data.plans=data.plans.filter(plan=>plan.id!==openPlanId); openPlanId=null; saveAndRender("Plan deleted."); } }
   if (button.dataset.logDay) { const plan=getPlan(openPlanId); const day=plan?.days.find(item=>item.id===button.dataset.logDay); if(day) openWorkoutEditor(day); }
   if (button.dataset.addExercise) openExercisePicker(button.dataset.addExercise);
@@ -400,7 +651,9 @@ document.addEventListener("click", event => {
 document.addEventListener("input", event => {
   if(event.target.id==="library-search"){librarySearch=event.target.value;drawLibraryResults();}
   if(event.target.id==="picker-search"){const query=event.target.value;const day=modal.dataset.pickerDay;modal.querySelector("#picker-results").innerHTML=pickerResults(query,day,modal.dataset.pickerSwap);}
-  if(event.target.id==="plan-start-date")updateBuilderSchedule(event.target.value);
+  if (["plan-start-date", "plan-follow-calendar"].includes(event.target.id)) updateBuilderSchedule(event.target.form);
+  if (["availability-type", "availability-duration", "availability-start", "cycle-length"].includes(event.target.id)) updateAvailabilityEditor(event.target.form);
+  if (event.target.id === "plan-schedule-type") updateScheduleEditor(event.target.form);
   if(event.target.id==="theme-slider"){
     data.theme=Number(event.target.value)===1?"dark":"light";
     persist();applyTheme();
@@ -413,14 +666,45 @@ document.addEventListener("input", event => {
 
 document.addEventListener("submit", event => {
   event.preventDefault();const form=event.target;const values=new FormData(form);
+  if (form.id === "availability-form") {
+    const type = values.get("type");
+    const start = values.get("start");
+    const end = values.get("duration") === "date" ? values.get("end") : null;
+    const rule = {type, start, end};
+    if (type === "weekly") {
+      rule.weekdays = weekDays.filter(day => values.getAll("weekdays").includes(day));
+    } else {
+      const trainingDays = new Set(values.getAll("cycleDay"));
+      rule.pattern = Array.from({length:Number(values.get("cycleLength"))}, (_, index) => trainingDays.has(String(index)));
+    }
+    if (!validAvailabilityRule(rule)) { toast("Choose at least one training day and a valid date range."); return; }
+    setAvailabilityRule(rule);
+    const visibleStart = rule.start > dateKey(new Date()) ? parseDateKey(rule.start) : new Date();
+    calendarMonth = new Date(visibleStart.getFullYear(), visibleStart.getMonth(), 1);
+    closeModal();
+    saveAndRender("Repeating availability saved.");
+    return;
+  }
   if(form.id==="plan-form"){
-    const goal=String(values.get("goal")).trim();const target=values.get("target")==="auto"?targetFor(goal):values.get("target");const split=values.get("split");
-    const scheduledDates=availabilityForWeek(String(values.get("startDate")));if(!scheduledDates.length){toast("Mark at least one available date during the selected 7-day window.");return;}
-    const weekdays=scheduledDates.map(weekdayForDate);
-    const includeCardio=values.has("includeCardio");const gear=values.getAll("gear");if(!gear.length&&split!=="Cardio"){toast("Choose at least one option for the strength exercises.");return;}
-    if(split==="Cardio"||includeCardio||target==="Improve endurance")gear.push("bodyweight","cardio");
-    const focus=focusFor(goal);const plan=makePlan({goal,target,split,count:weekdays.length,variation:Number(values.get("variation")),gear:[...new Set(gear)],focus,weekdays,scheduledDates,includeCardio});
-    previewPlan(plan);
+    const draft = {
+      goal: String(values.get("goal")).trim(), target: values.get("target"), split: values.get("split"),
+      variation: Number(values.get("variation")), startDate: values.get("startDate"), gear: values.getAll("gear"),
+      includeCardio: values.has("includeCardio"), followsCalendar: values.has("followsCalendar")
+    };
+    const scheduledDates = builderDates(draft.startDate, draft.followsCalendar);
+    if (!scheduledDates.length) { toast("Choose a start date with available training days."); return; }
+    const {goal, split, includeCardio, variation} = draft;
+    const target = draft.target === "auto" ? targetFor(goal) : draft.target;
+    const gear = new Set(draft.gear);
+    if (!gear.size && split !== "Cardio") { toast("Choose at least one option for the strength exercises."); return; }
+    if (split === "Cardio" || includeCardio || target === "Improve endurance") {
+      gear.add("bodyweight");
+      gear.add("cardio");
+    }
+    const weekdays = scheduledDates.map(weekdayForDate);
+    const plan = makePlan({goal, target, split, count:weekdays.length, variation, gear:[...gear], focus:focusFor(goal), weekdays, scheduledDates, includeCardio});
+    if (draft.followsCalendar) plan.calendarStart = draft.startDate;
+    previewPlan(plan, draft);
   }
   if(form.id==="recovery-form"){
     const plan=getPlan(values.get("plan")||form.dataset.plan);const missedIndex=plan?.days.findIndex(day=>day.id===values.get("missed"));
@@ -428,13 +712,25 @@ document.addEventListener("submit", event => {
     const gear=[...new Set(plan.days.flatMap(day=>day.items.map(item=>item.exercise.gear)))];
     const remaining=Number(values.get("remaining"));const orderedDays=[...plan.days.slice(missedIndex+1),...plan.days.slice(0,missedIndex)];const recoveryWeekdays=orderedDays.length>=remaining?orderedDays.slice(0,remaining).map(day=>day.weekday):defaultWeeklyDays(remaining);
     const recovery=makePlan({goal:`Back on track · ${plan.goal}`,target:plan.target,split:plan.split,count:remaining,variation:1,gear:gear.length?gear:["bodyweight"],focus:plan.focus,weekdays:recoveryWeekdays,includeCardio:plan.includeCardio,startIndex:missedIndex+1});
+    if (plan.calendarStart) {
+      const today = dateKey(new Date());
+      recovery.calendarStart = plan.calendarStart > today ? plan.calendarStart : today;
+    }
     data.plans.unshift(recovery);closeModal();openPlanId=recovery.id;saveAndRender("Recovery schedule saved.");
   }
   if(form.id==="schedule-form"){
     const plan=getPlan(values.get("plan")||form.dataset.plan);if(!plan)return;
+    if (values.get("type") === "calendar") {
+      plan.calendarStart ||= dateKey(new Date());
+      closeModal();
+      saveAndRender("Plan now follows your calendar.");
+      return;
+    }
     const selected=new Set(values.getAll("weekdays"));
     if(selected.size!==plan.days.length){toast(`Choose exactly ${plan.days.length} days for this plan.`);return;}
     const ordered=weekDays.filter(day=>selected.has(day));plan.days.forEach((day,index)=>{day.weekday=ordered[index];day.scheduledDate=null;});
+    delete plan.calendarStart;
+    delete plan.calendarOffset;
     closeModal();saveAndRender("Weekly schedule updated.");
   }
   if(form.id==="exercise-form"){

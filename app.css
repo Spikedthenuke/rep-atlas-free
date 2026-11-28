@@ -26,8 +26,9 @@ body {
 }
 
 .topbar {
-  height: 58px;
-  padding: 0 20px;
+  height: calc(58px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -143,12 +144,14 @@ main {
 
 .grid2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px
 }
 
 .field {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 6px;
   margin: 0 0 12px
 }
@@ -165,6 +168,8 @@ main {
 
 .field input,.field select,.field textarea,.searchbox,.modal input,.modal select {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid #dedad7;
   background: #fff;
   border-radius: 11px;
@@ -262,7 +267,7 @@ main {
 
 .check-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px
 }
 
@@ -277,10 +282,15 @@ main {
   background: #fff
 }
 
-.check-option input {
+.check-option input[type="checkbox"] {
   accent-color: var(--red);
-  width: 17px;
-  height: 17px
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 18px;
+  appearance: auto;
 }
 
 .plan-card {
@@ -527,7 +537,10 @@ main {
   width: 100%;
   max-width: 640px;
   max-height: min(90vh,850px);
-  overflow: auto;
+  max-height: min(90dvh,850px);
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   background: #f8f6f4;
   border-radius: 23px 23px 0 0;
   padding: 18px 16px calc(22px + env(safe-area-inset-bottom));
@@ -558,12 +571,13 @@ main {
 
 .modal-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 9px;
   margin-top: 16px
 }
 
 .modal-actions>* {
-  flex: 1
+  flex: 1 1 120px
 }
 
 .log-set {
@@ -650,18 +664,32 @@ main {
 
 .availability-card { padding: 14px }
 .calendar-heading { align-items: flex-start; gap: 8px }
+.calendar-heading .section-title { margin: 0 }
 .calendar-heading .subtle { margin: 4px 0 0 }
-.calendar-nav { display: flex; align-items: center; gap: 7px; white-space: nowrap }
-.calendar-nav strong { min-width: 112px; text-align: center; font-size: 13px }
+.calendar-rule { margin: 10px 0 0 }
+.calendar-nav { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 8px; margin-top: 12px }
+.calendar-nav .button { min-height: 44px }
+.calendar-nav strong { text-align: center; font-size: 14px }
 .calendar-grid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; margin-top: 8px }
 .calendar-weekdays { color: var(--muted); text-align: center; font-size: 10px; font-weight: 700; margin-top: 14px }
 .calendar-day { position: relative; min-width: 0; min-height: 43px; padding: 6px 1px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer }
 .calendar-day.selected { border-color: var(--red); background: var(--red); color: #fff; font-weight: 750 }
-.calendar-day small { display: block; font-size: 8px; font-weight: 650 }
 .calendar-day:disabled { border-color: transparent; background: transparent; color: var(--muted); opacity: .45; cursor: default }
 .calendar-blank { min-height: 43px }
-.calendar-footer { margin-top: 10px; align-items: center }
-.calendar-help { margin: 8px 0 0; font-size: 11px }
+.calendar-footer { margin-top: 10px; align-items: center; flex-wrap: wrap; gap: 4px 10px }
+.repeat-options { border: 0; padding: 0; min-inline-size: 0 }
+.repeat-options legend { padding: 0; margin-bottom: 6px }
+.repeat-options[hidden], .cycle-day[hidden], #availability-end-field[hidden] { display: none }
+.cycle-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 72px), 1fr)); gap: 6px }
+.cycle-day { position: relative; display: block; cursor: pointer }
+.cycle-day input[type="checkbox"] { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer }
+.cycle-day span { display: grid; place-content: center; gap: 2px; text-align: center; min-height: 48px; padding: 4px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); color: var(--ink) }
+.cycle-day small { font-size: 11px; color: var(--muted) }
+.cycle-day .cycle-on, .cycle-day input:checked + span .cycle-off { display: none }
+.cycle-day input:checked + span { background: var(--red); border-color: var(--red); color: #fff }
+.cycle-day input:checked + span .cycle-on { display: block; color: #fff }
+.cycle-day input:focus-visible + span { outline: 2px solid var(--red); outline-offset: 2px }
+.repeat-remove { display: block; min-height: 44px; margin: 8px auto 0 }
 .schedule-preview { display: grid; gap: 3px; border: 1px solid var(--line); border-radius: 11px; background: var(--soft); padding: 10px 12px; color: var(--ink); font-size: 12px }
 .schedule-preview span { color: var(--muted); line-height: 1.55 }
 .appearance-setting { padding: 12px; margin-bottom: 14px; background: var(--soft); border: 1px solid var(--line); border-radius: 14px }
@@ -714,3 +742,39 @@ main {
 .set-weight-control input[type="range"] { grid-column: 1 / -1; grid-row: 2; width: 100%; min-height: 28px; padding: 0; accent-color: var(--red); }
 .log-set > label { display: grid; grid-template-columns: 18px minmax(0,1fr); align-items: center; justify-content: start; justify-items: start; gap: 8px; width: max-content; max-width: 100%; text-align: left; }
 .log-set > label input[type="checkbox"] { width: 18px; min-width: 18px; height: 18px; min-height: 18px; margin: 0; padding: 0; flex: 0 0 18px; border-radius: 4px; appearance: auto; accent-color: var(--red); }
+
+.row > *, .exercise-row > *, .modal-head > *, .log-set > * { min-width: 0 }
+.row, .exercise-row, .card, .page-title, .modal, .toast { overflow-wrap: anywhere }
+.toast { width: max-content; max-width: calc(100% - 24px); text-align: center }
+
+@media (max-width: 639px) {
+  main {
+    padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
+  }
+  .topbar {
+    padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
+  }
+  .tabbar {
+    padding-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right));
+  }
+  .modal {
+    padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
+  }
+  .row { flex-wrap: wrap }
+  .availability-card { padding: 12px }
+  .field input, .field select, .field textarea, .searchbox, .modal input, .modal select, .log-set input {
+    font-size: 16px;
+  }
+  .field input, .field select, .field textarea, .modal input, .modal select {
+    padding-inline: 9px;
+  }
+  .field input[type="date"], .modal input[type="time"] {
+    display: block;
+    text-align: start;
+  }
+  .modal input::-webkit-date-and-time-value { text-align: start }
+}
+
+@media (max-width: 360px) {
+  #workout-form .grid2 { grid-template-columns: minmax(0, 1fr) }
+}

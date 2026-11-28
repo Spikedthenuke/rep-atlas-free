@@ -11,7 +11,7 @@ GitHub Free Pages hosting requires a public repository. The source and website a
 ## Features
 
 - Build full body, upper/lower, push/pull/legs, cardio, and mixed strength/cardio plans.
-- Mark workout availability on the calendar; plans use selected days and repeat weekly.
+- Mark individual dates or repeat availability on chosen weekdays or a rolling cycle. Set a last date or let it repeat indefinitely. Plans can follow the availability calendar or repeat on fixed weekdays.
 - Recover after a missed workout by rescheduling the remaining split appropriately.
 - Set goals, explore plan variations, track workout history, and edit or create exercises.
 - Search a library of 199 exercises.
