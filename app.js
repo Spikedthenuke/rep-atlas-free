@@ -566,8 +566,15 @@ function targetFor(text) {
 
 function focusFor(text) {
   const value = text.toLowerCase();
-  const aliases = {chest:["chest","pec"],shoulders:["shoulder","delt"],biceps:["bicep","arm"],triceps:["tricep","arm"],forearms:["forearm"],abs:["abs","core"],obliques:["oblique","core"],traps:["trap","back"],lats:["lat","back"],lowerBack:["lumbar","back"],glutes:["glute","leg"],quads:["quad","leg"],hamstrings:["hamstring","leg"],calves:["calf","calves","leg"]};
-  return muscles.filter(muscle => aliases[muscle].some(word => value.includes(word)));
+  const aliases = {
+    chest:["chest","pec"], shoulders:["shoulder","delt"], biceps:["bicep","arm"],
+    triceps:["tricep","arm"], forearms:["forearm"], abs:["abs","core"],
+    obliques:["oblique","core"], serratus:["serratus","rib"], traps:["trap","back"],
+    upperBack:["upper back","back","trap"], lats:["lat","back"], lowerBack:["lumbar","lower back","back"],
+    glutes:["glute","leg"], quads:["quad","leg"], adductors:["adductor","inner thigh","leg"],
+    hamstrings:["hamstring","leg"], calves:["calf","calves","leg"]
+  };
+  return muscles.filter(muscle => (aliases[muscle] || [label(muscle).toLowerCase()]).some(word => value.includes(word)));
 }
 
 function makePlan({goal, target, split, count, variation, gear, focus, weekdays = defaultWeeklyDays(count), scheduledDates = [], includeCardio = false, startIndex = 0}) {

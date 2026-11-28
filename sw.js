@@ -1,6 +1,6 @@
-const CACHE = "rep-atlas-v29";
+const CACHE = "rep-atlas-v30";
 const FILES = [
-  "./", "./index.html", "./app.css?v=29", "./app.js?v=29", "./push.js/push.js",
+  "./", "./index.html", "./app.css?v=30", "./app.js?v=30", "./push.js/push.js",
   "./catalog.json", "./manifest.webmanifest", "./icon.svg", "./icon-180.png", "./icon-192.png", "./icon-512.png",
   "./muscle-map-reference.png", "./muscle-map-neutral.png",
   "./muscle-mask-abs-left.png", "./muscle-mask-abs-right.png",
