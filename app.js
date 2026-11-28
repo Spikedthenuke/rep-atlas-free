@@ -575,12 +575,22 @@ function exportBackup() {
 
 function openBackupMenu() {
   const dark=data.theme==="dark";
-  showModal("Settings and backup", `<section class="appearance-setting"><div class="row"><div><strong>Appearance</strong><div class="subtle" id="theme-mode-label">${dark?"Dark":"Light"} mode</div></div><label class="theme-control" aria-label="Choose light or dark mode"><span>Light</span><input id="theme-slider" type="range" min="0" max="1" step="1" value="${dark?1:0}" aria-valuetext="${dark?"Dark":"Light"}"><span>Dark</span></label></div></section><p class="subtle">Your plans and logs stay in this app on this phone. Export a backup before changing phones or clearing website data.</p><div class="stack"><button class="button primary" data-action="export-backup">Save backup file</button><button class="button soft" data-action="import-backup">Restore from a backup file</button></div>`);
+  showModal("Settings and backup", `<section class="appearance-setting"><div class="row"><div><strong>Appearance</strong><div class="subtle" id="theme-mode-label">${dark?"Dark":"Light"} mode</div></div><div class="theme-control"><span id="theme-light-label" class="${dark?"":"is-active"}">Light</span><button id="theme-slider" class="theme-switch" type="button" role="switch" aria-label="Dark mode" aria-checked="${dark}" title="Toggle light and dark mode"><span class="theme-switch-thumb" aria-hidden="true"></span></button><span id="theme-dark-label" class="${dark?"is-active":""}">Dark</span></div></div></section><p class="subtle">Your plans and logs stay in this app on this phone. Export a backup before changing phones or clearing website data.</p><div class="stack"><button class="button primary" data-action="export-backup">Save backup file</button><button class="button soft" data-action="import-backup">Restore from a backup file</button></div>`);
 }
 
 document.addEventListener("click", event => {
   const button = event.target.closest("button,[data-open-plan]");
   if (!button) { if (event.target === modal) closeModal(); return; }
+  if(button.id==="theme-slider"){
+    data.theme=data.theme==="dark"?"light":"dark";
+    const dark=data.theme==="dark";
+    persist();applyTheme();
+    const label=document.querySelector("#theme-mode-label");if(label)label.textContent=`${dark?"Dark":"Light"} mode`;
+    button.setAttribute("aria-checked",String(dark));
+    document.querySelector("#theme-light-label")?.classList.toggle("is-active",!dark);
+    document.querySelector("#theme-dark-label")?.classList.toggle("is-active",dark);
+    return;
+  }
   if(button.dataset.calendarShift){calendarMonth.setMonth(calendarMonth.getMonth()+Number(button.dataset.calendarShift));render();return;}
   if(button.dataset.availabilityDate){
     const date = button.dataset.availabilityDate;
@@ -654,12 +664,6 @@ document.addEventListener("input", event => {
   if (["plan-start-date", "plan-follow-calendar"].includes(event.target.id)) updateBuilderSchedule(event.target.form);
   if (["availability-type", "availability-duration", "availability-start", "cycle-length"].includes(event.target.id)) updateAvailabilityEditor(event.target.form);
   if (event.target.id === "plan-schedule-type") updateScheduleEditor(event.target.form);
-  if(event.target.id==="theme-slider"){
-    data.theme=Number(event.target.value)===1?"dark":"light";
-    persist();applyTheme();
-    const label=document.querySelector("#theme-mode-label");if(label)label.textContent=`${data.theme==="dark"?"Dark":"Light"} mode`;
-    event.target.setAttribute("aria-valuetext",data.theme==="dark"?"Dark":"Light");
-  }
   if(event.target.dataset.logDone!==undefined) logDraft[Number(event.target.dataset.logDone)].done=event.target.checked;
   if(event.target.dataset.logAmount!==undefined) logDraft[Number(event.target.dataset.logAmount)].amount=Number(event.target.value)||0;  if(event.target.dataset.logWeight!==undefined||event.target.dataset.logWeightSlider!==undefined){const index=Number(event.target.dataset.logWeight??event.target.dataset.logWeightSlider),weight=Math.max(0,Number(event.target.value)||0),number=document.querySelector('[data-log-weight="'+index+'"]'),slider=document.querySelector('[data-log-weight-slider="'+index+'"]');logDraft[index].weight=weight;if(number&&number!==event.target)number.value=weight?String(weight):"";if(slider&&slider!==event.target){if(weight>Number(slider.max))slider.max=String(Math.ceil(weight/50)*50);slider.value=String(weight)}}
 });
